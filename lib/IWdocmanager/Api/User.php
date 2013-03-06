@@ -91,18 +91,20 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
 
     public function createDoc($args) {
         // Security check
-        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADD)) {
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
             return LogUtil::registerPermissionError();
         }
 
         // check if user can access to this category
         $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $categoryId,
-                    'accessType' => 'read',
+                    'accessType' => 'add',
                 ));
         if (!$canAccess) {
             LogUtil::registerError($this->__('You can not add documents to this category'));
             return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
         }
+
+        $validated = (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADD)) ? 1 : 0;
 
         $item = array('documentName' => $args['documentName'],
             'categoryId' => $args['categoryId'],
@@ -110,6 +112,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
             'version' => $args['version'],
             'authorName' => $args['authorName'],
             'description' => $args['description'],
+            'validated' => $validated,
         );
 
         if (!DBUtil::insertObject($item, 'IWdocmanager', 'documentId')) {
@@ -178,7 +181,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
 
     public function setFileName($args) {
         // Security check
-        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADD)) {
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
             return LogUtil::registerPermissionError();
         }
         $table = DBUtil::getTables();
@@ -186,9 +189,11 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
 
         $uid = UserUtil::getVar('uid');
 
-        $where = "$c[documentId] = $args[documentId] AND $c[cr_uid] = $uid AND $c[validated] = 0";
+        $validated = (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADD)) ? 1 : 0;
 
-        $item = array('fileName' => $rags['fileName']);
+        $where = "$c[documentId] = $args[documentId] AND $c[cr_uid] = $uid AND $c[validated] = $validated";
+
+        $item = array('fileName' => $args['fileName']);
 
         if (!DBUtil::updateObject($item, 'IWdocmanager', $where)) {
             return LogUtil::registerError($this->__('Error! Update attempt failed.'));
@@ -208,7 +213,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
             return LogUtil::registerError($this->__('Error! Could not do what you wanted. Please check your input.'));
         }
 
-        $item = DBUtil::selectObjectByID('IWdocmanager', $args['documentId'], 'dcumentId');
+        $item = DBUtil::selectObjectByID('IWdocmanager', $args['documentId'], 'documentId');
 
         // Check for an error with the database code, and if so set an appropriate
         // error message and return
@@ -227,9 +232,58 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         if ($item['validated'] != 1 && !SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADMIN)) {
             return false;
         }
-        
+
         // Return the items
         return $item;
+    }
+
+    public function countClick($args) {
+        // Security check
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
+            return LogUtil::registerPermissionError();
+        }
+
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $args['documentId']));
+
+        // check if user can access to this category
+        $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $document['categoryId'],
+                    'accessType' => 'read',
+                ));
+        if (!$canAccess) {
+            LogUtil::registerError($this->__('You can not add documents to this category'));
+            return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
+        }
+
+        $table = DBUtil::getTables();
+        $c = $table['IWdocmanager_column'];
+
+        $where = "$c[documentId] = $args[documentId]";
+
+        $item = array('nClicks' => $document['nClicks'] + 1);
+
+        if (!DBUtil::updateObject($item, 'IWdocmanager', $where)) {
+            return LogUtil::registerError($this->__('Error! Update attempt failed.'));
+        }
+        return true;
+    }
+
+    public function validateDocument($args) {
+        // Security check
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT)) {
+            return LogUtil::registerPermissionError();
+        }
+
+        $table = DBUtil::getTables();
+        $c = $table['IWdocmanager_column'];
+
+        $where = "$c[documentId] = $args[documentId]";
+
+        $item = array('validated' => 1);
+
+        if (!DBUtil::updateObject($item, 'IWdocmanager', $where)) {
+            return LogUtil::registerError($this->__('Error! Update attempt failed.'));
+        }
+        return true;
     }
 
 }

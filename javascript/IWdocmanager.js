@@ -174,6 +174,7 @@ function openDocumentLink(a){
     var b={
         documentId:a
     };
+    
     var c=new Zikula.Ajax.Request(Zikula.Config.baseURL+"ajax.php?module=IWdocmanager&func=openDocumentLink",{
         parameters: b,
         onComplete: openDocumentLink_response,
@@ -182,13 +183,32 @@ function openDocumentLink(a){
 }
 
 function openDocumentLink_response(a){
-        if(!a.isSuccess()){
+    if(!a.isSuccess()){
+        Zikula.showajaxerror(a.getMessage());
+        return
+    }
+    var b=a.getData();
+    document.location.href=b.href;
+}
+
+function validateDocument(a){
+    var b={
+        documentId:a
+    };
+       
+    var c=new Zikula.Ajax.Request(Zikula.Config.baseURL+"ajax.php?module=IWdocmanager&func=validateDocument",{
+        parameters: b,
+        onComplete: validateDocument_response,
+        onFailure: failure
+    });
+}
+
+function validateDocument_response(a){
+    if(!a.isSuccess()){
         Zikula.showajaxerror(a.getMessage());
         return
     }
     var b=a.getData();
     
-    // Open document http TODO
-    //b.href;
-    /* $("IWdocmanager_admin").update(b.content);*/
+    $("documentsContent").update(b.content);
 }

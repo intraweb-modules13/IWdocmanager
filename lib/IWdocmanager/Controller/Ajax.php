@@ -155,10 +155,45 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
             throw new Zikula_Exception_Fatal($this->__('Document not found.'));
         }
 
+        // check if user can access to this category
+        $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $document['categoryId'],
+                    'accessType' => 'read',
+                ));
+
+        if (!$canAccess) {
+            throw new Zikula_Exception_Fatal($this->__('You can not add documents to this category.'));
+        }
+
         // count click on document record
-        // TODO
+        ModUtil::apiFunc($this->name, 'user', 'countClick', array('documentId' => $documentId));
 
         return new Zikula_Response_Ajax(array('href' => $document['documentLink'],
+                ));
+    }
+
+    public function validateDocument($args) {
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT)) {
+            throw new Zikula_Exception_Fatal($this->__('Sorry! No authorization to access this module.'));
+        }
+        $documentId = $this->request->getPost()->get('documentId', '');
+        if (!$documentId) {
+            throw new Zikula_Exception_Fatal($this->__('no document id'));
+        }
+
+        // get document
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
+        if (!$document) {
+            throw new Zikula_Exception_Fatal($this->__('Document not found.'));
+        }
+
+        ModUtil::apiFunc($this->name, 'user', 'validateDocument', array('documentId' => $documentId));
+
+        $content = ModUtil::func($this->name, 'user', 'getDocumentsContent', array('categoryId' => $document['categoryId']));
+
+        // upload the number of documents in category
+        ModUtil::apiFunc($this->name, 'user', 'countDocuments', array('categoryId' => $document['categoryId']));
+
+        return new Zikula_Response_Ajax(array('content' => $content,
                 ));
     }
 

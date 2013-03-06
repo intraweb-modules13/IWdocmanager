@@ -41,43 +41,50 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         $directoriroot = ModUtil::getVar('IWmain', 'documentRoot');
         $documentsFolder = $this->getVar('documentsFolder');
 
-        $categoriesArray = ($categoryId > 0) ? array($categoryId) : array();
         $categories = ModUtil::Func($this->name, 'user', 'getUserCategories', array('accessType' => 'read'));
 
-        $canAdd = false;
-
         if ($categoryId > 0) {
-            // check if user can access to this category
-            $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $categoryId,
-                        'accessType' => 'read',
-                    ));
-            if (!$canAccess) {
-                LogUtil::registerError($this->__('You can not add documents to this category'));
-                return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
-            }
-
-            // check if user can access to this category
-            $canAdd = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $categoryId,
-                        'accessType' => 'add'));
-
-            $documents = ModUtil::apiFunc($this->name, 'user', 'getAllDocuments', array('categories' => $categoriesArray));
-            foreach ($documents as $document) {
-                $extensionIcon['icon'] = '';
-                if ($document['fileName'] != '') {
-                    $extension = FileUtil::getExtension($document['fileName']);
-                    $extensionIcon = ($extension != '') ? ModUtil::func('IWmain', 'user', 'getMimetype', array('extension' => $extension)) : '';
-                }
-                $documents[$document['documentId']]['extension'] = $extensionIcon['icon'];
-            }
+            $documentsContent = ModUtil::func($this->name, 'user', 'getDocumentsContent', array('categoryId' => $categoryId));
         } else {
-            $documents = array();
+            $documentsContent = '';
         }
 
-        return $this->view->assign('documents', $documents)
+        return $this->view->assign('documentsContent', $documentsContent)
                         ->assign('categories', $categories)
                         ->assign('categoryId', $categoryId)
-                        ->assign('canAdd', $canAdd)
                         ->fetch('IWdocmanager_user_viewDocs.tpl');
+    }
+
+    public function getDocumentsContent($args) {
+        $categoryId = FormUtil::getPassedValue('categoryId', isset($args['categoryId']) ? $args['categoryId'] : 0, 'POST');
+
+        // check if user can access to this category
+        $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $categoryId,
+                    'accessType' => 'read',
+                ));
+        if (!$canAccess) {
+            LogUtil::registerError($this->__('You can not add documents to this category'));
+            return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
+        }
+
+        // check if user can access to this category
+        $canAdd = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $categoryId,
+                    'accessType' => 'add'));
+
+        $categoriesArray = ($categoryId > 0) ? array($categoryId) : array();
+
+        $documents = ModUtil::apiFunc($this->name, 'user', 'getAllDocuments', array('categories' => $categoriesArray));
+        foreach ($documents as $document) {
+            $extensionIcon['icon'] = '';
+            if ($document['fileName'] != '') {
+                $extension = FileUtil::getExtension($document['fileName']);
+                $extensionIcon = ($extension != '') ? ModUtil::func('IWmain', 'user', 'getMimetype', array('extension' => $extension)) : '';
+            }
+            $documents[$document['documentId']]['extension'] = $extensionIcon['icon'];
+        }
+        return $this->view->assign('documents', $documents)
+                        ->assign('canAdd', $canAdd)
+                        ->fetch('IWdocmanager_user_viewDocsContent.tpl');
     }
 
     public function newDoc($args) {
@@ -140,7 +147,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         foreach ($categories as $category) {
 
             $groups = ($accessType == 'read') ? unserialize($category['groups']) : unserialize($category['groupsAdd']);
-           
+
             if ((count(array_intersect($userGroupsArray, $groups)) > 0) || (UserUtil::isLoggedIn() && in_array(0, $groups)) || (in_array(-1, $groups) && !UserUtil::isLoggedIn()) || SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADMIN)) {
                 $categoryData[$category['categoryId']] = array('categoryId' => $category['categoryId'],
                     'categoryPath' => $desc . $category['categoryName'],
@@ -246,7 +253,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         ModUtil::apiFunc($this->name, 'user', 'countDocuments', array('categoryId' => $categoryId));
 
         LogUtil::registerStatus($this->__('The document has been uploaded successfuly'));
-        return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
+        return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs', array('categoryId' => $categoryId)));
     }
 
     public function canAccessCategory($args) {
