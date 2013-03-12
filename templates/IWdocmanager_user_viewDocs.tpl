@@ -1,4 +1,4 @@
-{checkpermission component='IWdocmanager::' instance='::' level='ACCESS_ADMIN' assign='authadmin'}
+{checkpermission component='IWdocmanager::' instance='::' level='ACCESS_EDIT' assign='authedit'}
 {include file="IWdocmanager_user_menu.htm"}
 
 <h2>{gt text="Documents list"}</h2>
@@ -10,7 +10,7 @@
         {$categories[$categoryId].categoryPathLinks}
     </div>
     <div class="categorynDocumentsList">
-        {$categories[$categoryId].nDocuments}{if $authadmin}/<span style="color: red;">{$categories[$categoryId].nDocumentsNV}</span>{/if}
+        {$categories[$categoryId].nDocuments}{if $authedit}/<span style="color: red;">{$categories[$categoryId].nDocumentsNV}</span>{/if}
     </div>
     <div class="categoryDescriptionList">
         {$categories[$categoryId].description}
@@ -30,7 +30,7 @@
         </a>
     </div>
     <div class="categorynDocumentsList">
-        {$category.nDocuments}{if $authadmin}/<span style="color: red;">{$category.nDocumentsNV}</span>{/if}
+        {$category.nDocuments}{if $authedit}/<span style="color: red;">{$category.nDocumentsNV}</span>{/if}
     </div>
     <div class="categoryDescriptionList">
         {$category.description}

@@ -36,6 +36,7 @@ function IWdocmanager_tables() {
         'version' => 'version',
         'authorName' => 'authorName',
         'documentLink' => 'documentLink',
+        'fileOriginalName' => 'fileOriginalName',
     );
 
     $table['IWdocmanager_column_def'] = array('documentId' => "I NOTNULL AUTO PRIMARY",
@@ -50,6 +51,7 @@ function IWdocmanager_tables() {
         'version' => "C(30) NOTNULL DEFAULT ''",
         'authorName' => "C(120) NOTNULL DEFAULT ''",
         'documentLink' => "C(200) NOTNULL DEFAULT ''",
+        'fileOriginalName' => "C(100) NOTNULL DEFAULT ''",
     );
 
     ObjectUtil::addStandardFieldsToTableDefinition($table['IWdocmanager_column'], 'pn_');

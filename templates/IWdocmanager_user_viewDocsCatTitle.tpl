@@ -3,7 +3,7 @@
         {gt text="Category name"}
     </div>
     <div class="categorynDocumentsList">
-        {gt text="N. docs"}{if $authadmin} / <span style="color: red;">{gt text="To validate"}</span>{/if}
+        {gt text="N. docs"}{if $authedit} / <span style="color: red;">{gt text="To validate"}</span>{/if}
     </div>
     <div class="categoryDescriptionList">
         {gt text="Description"}

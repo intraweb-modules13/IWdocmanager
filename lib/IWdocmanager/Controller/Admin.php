@@ -40,6 +40,8 @@ class IWdocmanager_Controller_Admin extends Zikula_AbstractController {
         $directoriroot = ModUtil::getVar('IWmain', 'documentRoot');
         $documentsFolder = $this->getVar('documentsFolder');
         $notifyMail = $this->getVar('notifyMail');
+        $editTime = $this->getVar('editTime');
+        $deleteTime = $this->getVar('deleteTime');
 
         $noFolder = false;
         $noWriteable = false;
@@ -54,6 +56,8 @@ class IWdocmanager_Controller_Admin extends Zikula_AbstractController {
 
         return $this->view->assign('documentsFolder', $documentsFolder)
                         ->assign('notifyMail', $notifyMail)
+                        ->assign('editTime', $editTime)
+                        ->assign('deleteTime', $deleteTime)
                         ->assign('noFolder', $noFolder)
                         ->assign('noWriteable', $noWriteable)
                         ->assign('multizk', $multizk)
@@ -70,6 +74,8 @@ class IWdocmanager_Controller_Admin extends Zikula_AbstractController {
         // Get parameters from whatever input we need.
         $documentsFolder = FormUtil::getPassedValue('documentsFolder', isset($args['documentsFolder']) ? $args['documentsFolder'] : null, 'POST');
         $notifyMail = FormUtil::getPassedValue('notifyMail', isset($args['notifyMail']) ? $args['notifyMail'] : null, 'POST');
+        $editTime = FormUtil::getPassedValue('editTime', isset($args['editTime']) ? $args['editTime'] : 0, 'POST');
+        $deleteTime = FormUtil::getPassedValue('deleteTime', isset($args['deleteTime']) ? $args['deleteTime'] : 0, 'POST');
 
         // Security check
         if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADMIN)) {
@@ -78,8 +84,15 @@ class IWdocmanager_Controller_Admin extends Zikula_AbstractController {
         // Confirm authorisation code
         $this->checkCsrfToken();
 
+        if (!is_numeric($editTime))
+            $editTime = 0;
+        if (!is_numeric($deleteTime))
+            $deleteTime = 0;
+
         $this->setVar('documentsFolder', $documentsFolder)
-                ->setVar('notifyMail', $notifyMail);
+                ->setVar('notifyMail', $notifyMail)
+                ->setVar('editTime', $editTime)
+                ->setVar('deleteTime', $deleteTime);
 
         LogUtil::registerStatus($this->__('The configuration has been updated'));
 

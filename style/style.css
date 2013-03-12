@@ -31,7 +31,8 @@
 }
 
 .IWdocmanager_description{
-    font-style:italic
+    font-style:italic;
+    max-width: 430px;
 }
 
 .IWdocmanager_groups {
@@ -97,3 +98,13 @@
     padding-right: 7px;
 }
 
+.notValidatedLabel{
+    color: #aa0000;
+    font-style: italic;
+    margin-top: 7px;
+}
+
+.tableCellTop{
+    vertical-align: top !important;
+    padding: 5px;
+}

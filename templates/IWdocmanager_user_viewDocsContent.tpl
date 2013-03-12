@@ -2,6 +2,7 @@
 {checkpermission component='IWdocmanager::' instance='::' level='ACCESS_DELETE' assign='authdelete'}
 {checkpermission component='IWdocmanager::' instance='::' level='ACCESS_EDIT' assign='authedit'}
 {checkpermission component='IWdocmanager::' instance='::' level='ACCESS_EDIT' assign='authadd'}
+
 <table class="z-datatable">
     <thead>
         <tr>
@@ -24,20 +25,25 @@
                 <img src="images/icons/extrasmall/web.gif" style="vertical-align: middle;" />
                 {/if}
                 {$document.documentName}
+                {if $document.validated eq 0}
+                <div class="notValidatedLabel">
+                    {gt text="The document is pending of validation."}
+                </div>
+                {/if}
             </td>
-            <td style="padding: 5px;">
+            <td class="tableCellTop">
                 {$document.description}
             </td>
-            <td width="50" style="padding: 5px;">
+            <td width="50" class="tableCellTop">
                 {$document.version}
             </td>
-            <td width="100" style="padding: 5px;">
+            <td width="100" class="tableCellTop">
                 {$document.authorName}
             </td>
-            <td width="50" style="padding: 5px;">
+            <td width="50" class="tableCellTop">
                 {$document.nClicks}
             </td>
-            <td width="100" style="padding: 5px;">
+            <td width="100" class="tableCellTop">
                 {if $authedit}
                 {if $document.fileName eq '' && $document.documentLink eq ''}
                 {img modname='core' src='button_cancel.png' set='icons/extrasmall' __alt='Error'}
@@ -50,7 +56,7 @@
                 {/if}
                 {/if}
                 {if $document.fileName != ''}
-                <a href="">
+                <a href="{modurl modname='IWdocmanager' type='user' func='downloadDocument' documentId=$document.documentId}">
                     {img modname='core' src='download.png' set='icons/extrasmall' __alt='Download'}
                 </a>
                 {elseif $document.documentLink neq ''}

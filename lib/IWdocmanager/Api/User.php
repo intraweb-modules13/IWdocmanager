@@ -113,6 +113,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
             'authorName' => $args['authorName'],
             'description' => $args['description'],
             'validated' => $validated,
+            'fileOriginalName' => $args['fileOriginalName'],
         );
 
         if (!DBUtil::insertObject($item, 'IWdocmanager', 'documentId')) {
@@ -139,8 +140,10 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         }
 
         $categoriesString = substr($categoriesString, 0, -4);
+        
+        $editor = (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT)) ? " OR 1=1":'';
 
-        $where = ($categoriesString != '') ? '(' . $categoriesString . ") AND ($c[validated] = 1 OR $c[cr_uid]=$uid)" : "$c[validated] = 1 OR $c[cr_uid] = $uid";
+        $where = ($categoriesString != '') ? '(' . $categoriesString . ") AND ($c[validated] = 1 OR $c[cr_uid]=$uid $editor)" : "$c[validated] = 1 OR $c[cr_uid] = $uid $editor";
 
         $orderby = '';
 
@@ -229,7 +232,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         }
 
         // check that the document is active
-        if ($item['validated'] != 1 && !SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADMIN)) {
+        if ($item['validated'] != 1 && !SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT) && ($item['cr_uid'] != UserUtil::getVar('uid'))) {
             return false;
         }
 

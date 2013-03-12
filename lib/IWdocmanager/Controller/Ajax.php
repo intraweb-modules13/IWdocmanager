@@ -119,8 +119,8 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
         $groups = $this->request->getPost()->get('groups', '');
         $groupsAdd = $this->request->getPost()->get('groupsAdd', '');
 
-        $groupsArray = explode('$$', substr($groups, 1, strlen($groups) - 2));
-        $groupsAddArray = explode('$$', substr($groupsAdd, 1, strlen($groupsAdd) - 2));
+        $groupsArray = ($groups != '') ? explode('$$', substr($groups, 1, strlen($groups) - 2)) : array();
+        $groupsAddArray = ($groupsAdd != '') ? explode('$$', substr($groupsAdd, 1, strlen($groupsAdd) - 2)) : array();
 
         $groupsString = serialize($groupsArray);
         $groupsAddString = serialize($groupsAddArray);
@@ -144,6 +144,9 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
     }
 
     public function openDocumentLink($args) {
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
+            throw new Zikula_Exception_Fatal($this->__('Sorry! No authorization to access this module.'));
+        }
         $documentId = $this->request->getPost()->get('documentId', '');
         if (!$documentId) {
             throw new Zikula_Exception_Fatal($this->__('no document id'));
@@ -161,7 +164,7 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
                 ));
 
         if (!$canAccess) {
-            throw new Zikula_Exception_Fatal($this->__('You can not add documents to this category.'));
+            throw new Zikula_Exception_Fatal($this->__('You can not access to this document.'));
         }
 
         // count click on document record
@@ -195,6 +198,20 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
 
         return new Zikula_Response_Ajax(array('content' => $content,
                 ));
+    }
+
+    public function openDocument($args) {
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
+            throw new Zikula_Exception_Fatal($this->__('Sorry! No authorization to access this module.'));
+        }
+        $documentId = $this->request->getPost()->get('documentId', '');
+        if (!$documentId) {
+            throw new Zikula_Exception_Fatal($this->__('no document id'));
+        }
+
+        ModUtil::func($this->name, 'user', 'downloadDocument', array('documentId' => $documentId));
+
+        return new Zikula_Response_Ajax();
     }
 
 }

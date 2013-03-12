@@ -6,7 +6,7 @@
         {$categories}
     </div>
     <div class="z-informationmsg">
-        {gt text="The users with administrate access to the module IWdocmanager can view and add to all the categories."}
+        {gt text="The users with edition access to the module IWdocmanager can view and add to all the categories."}
     </div>
 </div>
 <script>

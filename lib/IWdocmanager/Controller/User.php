@@ -25,7 +25,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
      */
     public function main() {
         // Security check
-        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADMIN)) {
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
             return LogUtil::registerPermissionError();
         }
         return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
@@ -66,7 +66,6 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
             LogUtil::registerError($this->__('You can not add documents to this category'));
             return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
         }
-
         // check if user can access to this category
         $canAdd = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $categoryId,
                     'accessType' => 'add'));
@@ -74,6 +73,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         $categoriesArray = ($categoryId > 0) ? array($categoryId) : array();
 
         $documents = ModUtil::apiFunc($this->name, 'user', 'getAllDocuments', array('categories' => $categoriesArray));
+       
         foreach ($documents as $document) {
             $extensionIcon['icon'] = '';
             if ($document['fileName'] != '') {
@@ -148,7 +148,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
 
             $groups = ($accessType == 'read') ? unserialize($category['groups']) : unserialize($category['groupsAdd']);
 
-            if ((count(array_intersect($userGroupsArray, $groups)) > 0) || (UserUtil::isLoggedIn() && in_array(0, $groups)) || (in_array(-1, $groups) && !UserUtil::isLoggedIn()) || SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADMIN)) {
+            if ((count(array_intersect($userGroupsArray, $groups)) > 0) || (UserUtil::isLoggedIn() && in_array(0, $groups)) || (in_array(-1, $groups) && !UserUtil::isLoggedIn()) || SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT)) {
                 $categoryData[$category['categoryId']] = array('categoryId' => $category['categoryId'],
                     'categoryPath' => $desc . $category['categoryName'],
                     'categoryPathLinks' => $descLinks . $category['categoryName'],
@@ -222,6 +222,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
                     'version' => $version,
                     'authorName' => $authorName,
                     'description' => $description,
+                    'fileOriginalName' => str_replace($extension, '', DataUtil::formatPermalink($documentFile['name'])),
                 ));
 
         if (!$created) {
@@ -252,7 +253,12 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         // upload the number of documents in category
         ModUtil::apiFunc($this->name, 'user', 'countDocuments', array('categoryId' => $categoryId));
 
-        LogUtil::registerStatus($this->__('The document has been uploaded successfuly'));
+        $returnMsg = $this->__('The document has been uploaded successfuly');
+
+        $returnMsg .= (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADD)) ? "." : $this->__(' and it is pending of validation');
+
+        LogUtil::registerStatus($returnMsg);
+
         return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs', array('categoryId' => $categoryId)));
     }
 
@@ -267,6 +273,57 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         }
 
         return false;
+    }
+
+    public function downloadDocument($args) {
+        $documentId = FormUtil::getPassedValue('documentId', isset($args['documentId']) ? $args['documentId'] : 0, 'GET');
+
+        // get document
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
+        if (!$document) {
+            return LogUtil::registerError($update['msg'] . ' ' . $this->__('Document not found.'));
+        }
+
+        // check if user can access to this category
+        $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $document['categoryId'],
+                    'accessType' => 'read',
+                ));
+
+        if (!$canAccess) {
+            return LogUtil::registerError($update['msg'] . ' ' . $this->__('You can not access to this document.'));
+        }
+
+        // download the document
+        $documentPath = ModUtil::getVar('IWmain', 'documentRoot') . '/' . $this->getVar('documentsFolder') . '/' . $document['fileName'];
+        if (!file_exists($documentPath)) {
+            return LogUtil::registerError($this->__('Document not found.'));
+        }
+
+        // get file size
+        $fileSize = filesize($documentPath);
+
+        // Get file extension
+        $fileExtension = FileUtil::getExtension($documentPath);
+
+        $ctypeArray = ModUtil::func('IWmain', 'user', 'getMimetype', array('extension' => $fileExtension));
+        $ctype = $ctypeArray['type'];
+
+
+        //Begin writing headers
+        header("Pragma: public");
+        header("Expires: 0");
+        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+        header("Cache-Control: public");
+        header("Content-Description: File Transfer");
+        //Use the switch-generated Content-Type
+        header("Content-Type: $ctype");
+        //Force the download
+        $header = "Content-Disposition: attachment; filename=" . $document['fileOriginalName'] . '.' . $fileExtension . ";";
+        header($header);
+        header("Content-Transfer-Encoding: binary");
+        header("Content-Length: " . $fileSize);
+        @readfile($documentPath);
+        return true;
     }
 
 }

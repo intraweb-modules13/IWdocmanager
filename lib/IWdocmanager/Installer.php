@@ -42,7 +42,9 @@ class IWdocmanager_Installer extends Zikula_AbstractInstaller {
 
         //Create module vars
         $this->setVar('documentsFolder', 'documents')
-                ->setVar('notifyMail', '');
+                ->setVar('notifyMail', '')
+                ->setVar('editTime', '45')
+                ->setVar('deleteTime', '20');
 
         return true;
     }
@@ -59,7 +61,9 @@ class IWdocmanager_Installer extends Zikula_AbstractInstaller {
 
         //Delete module vars
         $this->delVar('documentsFolder')
-                ->delVar('notifyMail');
+                ->delVar('notifyMail')
+                ->delVar('editTime')
+                ->delVar('deleteTime');
         //Deletion successfull
         return true;
     }

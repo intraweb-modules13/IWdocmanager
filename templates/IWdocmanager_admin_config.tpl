@@ -29,6 +29,14 @@
             <label for="notifyMail">{gt text="E-mail new entries notification"}</label>
             <input id="notifyMail" type="text" name="notifyMail" size="30" maxlength="30" value="{$notifyMail}" />
         </div>
+        <div class="z-formrow">
+            <label for="editTime">{gt text="Minutes while the user who has sended a document can edit it"}</label>
+            <input id="editTime" type="text" name="editTime" value="{$editTime}" />
+        </div>
+        <div class="z-formrow">
+            <label for="deleteTime">{gt text="Minutes while the user who has sended a document can delete it"}</label>
+            <input id="deleteTime" type="text" name="deleteTime" value="{$deleteTime}" />
+        </div>
         <div class="z-buttons z-center">
             <a title="Change the state" onClick="javascript: document.forms['conf'].submit();">
                 {img modname='core' src='button_ok.png' set='icons/small'}
