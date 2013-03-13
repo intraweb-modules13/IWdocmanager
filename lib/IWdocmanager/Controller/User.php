@@ -73,7 +73,12 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         $categoriesArray = ($categoryId > 0) ? array($categoryId) : array();
 
         $documents = ModUtil::apiFunc($this->name, 'user', 'getAllDocuments', array('categories' => $categoriesArray));
-       
+
+        $usersList = '';
+        $users = array();
+        $canEdit = false;
+        $canDelete = false;
+
         foreach ($documents as $document) {
             $extensionIcon['icon'] = '';
             if ($document['fileName'] != '') {
@@ -81,9 +86,36 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
                 $extensionIcon = ($extension != '') ? ModUtil::func('IWmain', 'user', 'getMimetype', array('extension' => $extension)) : '';
             }
             $documents[$document['documentId']]['extension'] = $extensionIcon['icon'];
+            if ($document['authorName'] == '') {
+                $usersList .= $document['cr_uid'] . '$$';
+            }
+            $documents[$document['documentId']]['canEdit'] = false;
+            $documents[$document['documentId']]['canDelete'] = false;
+            if ($document['validated'] == 0 && UserUtil::getVar('uid') == $document['cr_uid'] && DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 > time()) {
+                $documents[$document['documentId']]['canEdit'] = true;
+                $canEdit = true; // in order to show edit icon in legend
+            }
+
+            if ($document['validated'] == 0 && UserUtil::getVar('uid') == $document['cr_uid'] && DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('deleteTime') * 30 > time()) {
+                $documents[$document['documentId']]['canDelete'] = true;
+                $canDelete = true;
+                $canEdit = true; // in order to show delete icon in legend
+            }
         }
+
+        if ($usersList != '') {
+            // get all users information
+            $sv = ModUtil::func('IWmain', 'user', 'genSecurityValue');
+            $users = ModUtil::func('IWmain', 'user', 'getAllUsersInfo', array('sv' => $sv,
+                        'info' => 'ncc',
+                        'list' => $usersList));
+        }
+
         return $this->view->assign('documents', $documents)
                         ->assign('canAdd', $canAdd)
+                        ->assign('users', $users)
+                        ->assign('canEdit', $canEdit)
+                        ->assign('canDelete', $canDelete)
                         ->fetch('IWdocmanager_user_viewDocsContent.tpl');
     }
 
@@ -258,6 +290,82 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         $returnMsg .= (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADD)) ? "." : $this->__(' and it is pending of validation');
 
         LogUtil::registerStatus($returnMsg);
+
+        return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs', array('categoryId' => $categoryId)));
+    }
+
+    public function editDocument($args) {
+        $documentId = FormUtil::getPassedValue('documentId', isset($args['documentId']) ? $args['documentId'] : 0, 'GET');
+
+        // get document
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
+        if (!$document) {
+            return LogUtil::registerError($update['msg'] . ' ' . $this->__('Document not found.'));
+        }
+
+        // the documents only can be edited by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 < time())) {
+            return LogUtil::registerPermissionError();
+        }
+
+        $categories = ModUtil::Func($this->name, 'user', 'getUserCategories', array('accessType' => 'add'));
+
+        $extensions = str_replace('|', ', ', ModUtil::getVar('IWmain', 'extensions'));
+
+        $fileExtension = ($document['fileName'] != '') ? FileUtil::getExtension($document['fileName']) : '';
+
+        return $this->view->assign('document', $document)
+                        ->assign('function', 'updateDoc')
+                        ->assign('extensions', $extensions)
+                        ->assign('categories', $categories)
+                        ->assign('categoryId', $document['categoryId'])
+                        ->assign('fileExtension', $fileExtension)
+                        ->fetch('IWdocmanager_user_addEditDoc.tpl');
+    }
+
+    public function updateDoc($args) {
+        $documentId = FormUtil::getPassedValue('documentId', isset($args['documentId']) ? $args['documentId'] : 0, 'POST');
+        $documentName = FormUtil::getPassedValue('documentName', isset($args['documentName']) ? $args['documentName'] : null, 'POST');
+        $categoryId = FormUtil::getPassedValue('categoryId', isset($args['categoryId']) ? $args['categoryId'] : 0, 'POST');
+        $documentLink = FormUtil::getPassedValue('documentLink', isset($args['documentLink']) ? $args['documentLink'] : null, 'POST');
+        $version = FormUtil::getPassedValue('version', isset($args['version']) ? $args['version'] : null, 'POST');
+        $authorName = FormUtil::getPassedValue('authorName', isset($args['authorName']) ? $args['authorName'] : null, 'POST');
+        $description = FormUtil::getPassedValue('description', isset($args['description']) ? $args['description'] : null, 'POST');
+
+        // Security check
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
+            return LogUtil::registerPermissionError();
+        }
+
+        // Confirm authorisation code
+        $this->checkCsrfToken();
+
+        // get document
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
+        if (!$document) {
+            return LogUtil::registerError($update['msg'] . ' ' . $this->__('Document not found.'));
+        }
+
+        // the documents only can be edited by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 < time())) {
+            return LogUtil::registerPermissionError();
+        }
+
+        $edited = ModUtil::apiFunc($this->name, 'user', 'updateDoc', array('documentId' => $documentId,
+                    'item' => array('documentName' => $documentName,
+                        'categoryId' => $categoryId,
+                        'documentLink' => $documentLink,
+                        'version' => $version,
+                        'authorName' => $authorName,
+                        'description' => $description,
+                        )));
+
+        if (!$edited) {
+            LogUtil::registerError($this->__('Error: editing document'));
+            return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs', array('categoryId' => $categoryId)));
+        }
+
+        LogUtil::registerStatus($this->__('The document has been edited successfully'));
 
         return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs', array('categoryId' => $categoryId)));
     }

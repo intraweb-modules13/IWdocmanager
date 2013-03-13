@@ -212,3 +212,30 @@ function validateDocument_response(a){
     
     $("documentsContent").update(b.content);
 }
+
+function deleteDocument(a){
+    var r = confirm(deteleText);
+    
+    if (!r) {
+        return true;
+    }
+    var b={
+        documentId:a
+    };
+       
+    var c=new Zikula.Ajax.Request(Zikula.Config.baseURL+"ajax.php?module=IWdocmanager&func=deleteDocument",{
+        parameters: b,
+        onComplete: deleteDocument_response,
+        onFailure: failure
+    });
+}
+
+function deleteDocument_response(a){
+    if(!a.isSuccess()){
+        Zikula.showajaxerror(a.getMessage());
+        return
+    }
+    var b=a.getData();
+    
+    $("documentsContent").update(b.content);
+}

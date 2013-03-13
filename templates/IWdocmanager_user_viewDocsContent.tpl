@@ -38,7 +38,11 @@
                 {$document.version}
             </td>
             <td width="100" class="tableCellTop">
+                {if $document.authorName neq ''}
                 {$document.authorName}
+                {else}
+                {$users[$document.cr_uid]}
+                {/if}
             </td>
             <td width="50" class="tableCellTop">
                 {$document.nClicks}
@@ -65,17 +69,17 @@
                 </a>
                 {/if}
                 {if $document.fileName neq '' AND ($canAdd || $authadd)}
-                <a href="">
+                <a href="{modurl modname='IWdocmanager' type='user' func='editDocument' documentId=$document.documentId newVersion=1}">
                     {img modname='core' src='filenew.png' set='icons/extrasmall' __alt='New version'}
                 </a>
                 {/if}                
-                {if $authedit}
-                <a href="">
+                {if $authedit OR $document.canEdit}
+                <a href="{modurl modname='IWdocmanager' type='user' func='editDocument' documentId=$document.documentId}">
                     {img modname='core' src='xedit.png' set='icons/extrasmall' __alt='Edit'}
                 </a>
                 {/if}
-                {if $authdelete}
-                <a href="">
+                {if $authdelete OR $document.canDelete}
+                <a class="z-pointer" onClick="deleteDocument({$document.documentId});">
                     {img modname='core' src='14_layer_deletelayer.png' set='icons/extrasmall' __alt='Delete'}
                 </a>
                 {/if}
@@ -102,10 +106,14 @@
     {if $canAdd}
     <li>{img modname='core' src='filenew.png' set='icons/extrasmall' __alt='New version'} {gt text="Add a new version of the document"}</li>
     {/if}
-    {if $authedit}
+    {if $authedit OR $canEdit}
     <li>{img modname='core' src='xedit.png' set='icons/extrasmall' __alt='Edit'} {gt text="Edit document information"}</li>
     {/if}
-    {if $authdelete}
+    {if $authdelete OR $canDelete}
     <li>{img modname='core' src='14_layer_deletelayer.png' set='icons/extrasmall' __alt='Delete'} {gt text="Delete document"}</li>
     {/if}
 </ul>
+
+<script>
+    var deteleText = '{{gt text="Confirm deletion!"}}';
+</script>

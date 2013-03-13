@@ -124,6 +124,42 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         return $item['documentId'];
     }
 
+    public function updateDoc($args) {
+
+        // get document
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $args['documentId']));
+        if (!$document) {
+            return LogUtil::registerError($update['msg'] . ' ' . $this->__('Document not found.'));
+        }
+
+        // the documents only can be edited by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 < time())) {
+            return LogUtil::registerPermissionError();
+        }
+
+        $table = DBUtil::getTables();
+        $c = $table['IWdocmanager_column'];
+
+        $where = "$c[documentId] = $args[documentId]";
+
+        if (!DBUtil::updateObject($args['item'], 'IWdocmanager', $where)) {
+            return LogUtil::registerError($this->__('Error! Update attempt failed.'));
+        }
+
+        return true;
+    }
+
+    /*
+      $edited = ModUtil::apiFunc($this->name, 'user', 'updateDoc', array('documentId' => $documentId,
+      'item' => array('documentName' => $documentName,
+      'categoryId' => $categoryId,
+      'documentLink' => $documentLink,
+      'version' => $version,
+      'authorName' => $authorName,
+      'description' => $description,
+      )));
+     */
+
     public function getAllDocuments($args) {
         if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
             return LogUtil::registerPermissionError();
@@ -140,8 +176,8 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         }
 
         $categoriesString = substr($categoriesString, 0, -4);
-        
-        $editor = (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT)) ? " OR 1=1":'';
+
+        $editor = (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT)) ? " OR 1=1" : '';
 
         $where = ($categoriesString != '') ? '(' . $categoriesString . ") AND ($c[validated] = 1 OR $c[cr_uid]=$uid $editor)" : "$c[validated] = 1 OR $c[cr_uid] = $uid $editor";
 
@@ -284,6 +320,24 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         $item = array('validated' => 1);
 
         if (!DBUtil::updateObject($item, 'IWdocmanager', $where)) {
+            return LogUtil::registerError($this->__('Error! Update attempt failed.'));
+        }
+        return true;
+    }
+
+    public function deleteDocument($args) {
+        // get document
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $args['documentId']));
+        if (!$document) {
+            return LogUtil::registerError($update['msg'] . ' ' . $this->__('Document not found.'));
+        }
+
+        // the documents only can be deleted by people with DELETE_ACCESS to the module or by creators during the time defined in the module configuration
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_DELETE) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('deleteTime') * 30 < time())) {
+            return LogUtil::registerPermissionError();
+        }
+
+        if (!DBUtil::deleteObjectByID('IWdocmanager', $args['documentId'], 'documentId')) {
             return LogUtil::registerError($this->__('Error! Update attempt failed.'));
         }
         return true;

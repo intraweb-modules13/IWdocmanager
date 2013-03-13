@@ -23,6 +23,17 @@
         </select>
     </div>
     <div class="z-formrow">
+        {if $document.documentId gt 0}
+        {if $document.fileOriginalName neq ''}
+        <label for="documentFile">{gt text="File"}</label>
+        <div class="z-formnote">
+            <strong>{$document.fileOriginalName}.{$fileExtension}</strong>
+        </div>
+        {else}
+        <label for="documentFile">{gt text="File link"}</label>
+        <input type="text" id="documentLink" name="documentLink" size="70" value="{$document.documentLink}" />
+        {/if}
+        {else}
         <label for="documentFile">{gt text="File"}</label>
         <input type="file" id="documentFile" name="documentFile" value="" />
         <div class="z-formnote">
@@ -31,6 +42,7 @@
         <div class="z-formnote z-informationmsg">
             {gt text="Possible extensions"}: {$extensions}
         </div>
+        {/if}
     </div>
     <div class="z-formrow">
         <label for="version">{gt text="Version"}</label>
@@ -55,7 +67,7 @@
             </a>
         </span>
         <span class="z-buttons">
-            <a href="{modurl modname='IWdocmanager' type='user' func='viewDocs'}">
+            <a href="{modurl modname='IWdocmanager' type='user' func='viewDocs' categoryId=$categoryId}">
                 {img modname='core' src='button_cancel.png' set='icons/small'}
                 {gt text="Cancel"}
             </a>

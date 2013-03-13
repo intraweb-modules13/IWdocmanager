@@ -189,12 +189,15 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
             throw new Zikula_Exception_Fatal($this->__('Document not found.'));
         }
 
-        ModUtil::apiFunc($this->name, 'user', 'validateDocument', array('documentId' => $documentId));
-
-        $content = ModUtil::func($this->name, 'user', 'getDocumentsContent', array('categoryId' => $document['categoryId']));
+        $validated = ModUtil::apiFunc($this->name, 'user', 'validateDocument', array('documentId' => $documentId));
+        if (!$validated) {
+            throw new Zikula_Exception_Fatal($this->__('Error! Validate document failed.'));
+        }
 
         // upload the number of documents in category
         ModUtil::apiFunc($this->name, 'user', 'countDocuments', array('categoryId' => $document['categoryId']));
+
+        $content = ModUtil::func($this->name, 'user', 'getDocumentsContent', array('categoryId' => $document['categoryId']));
 
         return new Zikula_Response_Ajax(array('content' => $content,
                 ));
@@ -212,6 +215,47 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
         ModUtil::func($this->name, 'user', 'downloadDocument', array('documentId' => $documentId));
 
         return new Zikula_Response_Ajax();
+    }
+
+    public function deleteDocument($args) {
+        $documentId = $this->request->getPost()->get('documentId', '');
+        if (!$documentId) {
+            throw new Zikula_Exception_Fatal($this->__('no document id'));
+        }
+
+        // get document
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
+        if (!$document) {
+            throw new Zikula_Exception_Fatal($this->__('Document not found.'));
+        }
+
+        // the documents only can be deleted by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_DELETE) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('deleteTime') * 30 < time())) {
+            throw new Zikula_Exception_Fatal($this->__('Sorry! No authorization to access this module.'));
+        }
+        
+        $deleted = ModUtil::apiFunc($this->name, 'user', 'deleteDocument', array('documentId' => $documentId));
+        if (!$deleted) {
+            throw new Zikula_Exception_Fatal($this->__('Error! Delete document failed.'));
+        }
+
+
+        if ($document['fileName'] != '') {
+            // download the document
+            $documentPath = ModUtil::getVar('IWmain', 'documentRoot') . '/' . $this->getVar('documentsFolder') . '/' . $document['fileName'];
+            // delete file form server
+            if (file_exists($documentPath)) {
+                unlink($documentPath);
+            }
+        }
+
+        // upload the number of documents in category
+        ModUtil::apiFunc($this->name, 'user', 'countDocuments', array('categoryId' => $document['categoryId']));
+
+        $content = ModUtil::func($this->name, 'user', 'getDocumentsContent', array('categoryId' => $document['categoryId']));
+
+        return new Zikula_Response_Ajax(array('content' => $content,
+                ));
     }
 
 }
