@@ -22,7 +22,6 @@
                 <img src="modules/IWmain/images/fileIcons/{$document.extension}" style="vertical-align: middle;" />
                 {elseif $document.documentLink neq ''}
                 {img modname='core' src='web.png' set='icons/extrasmall' __alt='link'}
-                <img src="images/icons/extrasmall/web.gif" style="vertical-align: middle;" />
                 {/if}
                 {$document.documentName}
                 {if $document.validated eq 0}
@@ -68,7 +67,7 @@
                     {img modname='core' src='web.png' set='icons/extrasmall' __alt='Browse website'}
                 </a>
                 {/if}
-                {if $document.fileName neq '' AND ($canAdd || $authadd)}
+                {if $document.fileName neq '' AND ($canAdd || $authadd) AND $document.validated eq 1 AND $document.versioned lt 1}
                 <a href="{modurl modname='IWdocmanager' type='user' func='editDocument' documentId=$document.documentId newVersion=1}">
                     {img modname='core' src='filenew.png' set='icons/extrasmall' __alt='New version'}
                 </a>
@@ -81,6 +80,12 @@
                 {if $authdelete OR $document.canDelete}
                 <a class="z-pointer" onClick="deleteDocument({$document.documentId});">
                     {img modname='core' src='14_layer_deletelayer.png' set='icons/extrasmall' __alt='Delete'}
+                </a>
+                {/if}
+                {if $document.versionFrom neq ''}
+                {assign var=versions value=1}
+                <a class="z-pointer" onClick="viewDocumentVersions({$document.documentId});">
+                    {img modname='core' src='mydocuments.png' set='icons/extrasmall' __alt='View versions'}
                 </a>
                 {/if}
             </td>
@@ -111,6 +116,9 @@
     {/if}
     {if $authdelete OR $canDelete}
     <li>{img modname='core' src='14_layer_deletelayer.png' set='icons/extrasmall' __alt='Delete'} {gt text="Delete document"}</li>
+    {/if}
+    {if isset($versions)}
+    <li>{img modname='core' src='mydocuments.png' set='icons/extrasmall' __alt='View versions'} {gt text="View versions"}</li>
     {/if}
 </ul>
 

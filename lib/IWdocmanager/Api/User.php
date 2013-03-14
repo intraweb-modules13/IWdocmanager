@@ -114,6 +114,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
             'description' => $args['description'],
             'validated' => $validated,
             'fileOriginalName' => $args['fileOriginalName'],
+            'versionFrom' => $args['versionFrom'],
         );
 
         if (!DBUtil::insertObject($item, 'IWdocmanager', 'documentId')) {
@@ -129,7 +130,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         // get document
         $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $args['documentId']));
         if (!$document) {
-            return LogUtil::registerError($update['msg'] . ' ' . $this->__('Document not found.'));
+            return LogUtil::registerError($this->__('Document not found.'));
         }
 
         // the documents only can be edited by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
@@ -148,17 +149,6 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
 
         return true;
     }
-
-    /*
-      $edited = ModUtil::apiFunc($this->name, 'user', 'updateDoc', array('documentId' => $documentId,
-      'item' => array('documentName' => $documentName,
-      'categoryId' => $categoryId,
-      'documentLink' => $documentLink,
-      'version' => $version,
-      'authorName' => $authorName,
-      'description' => $description,
-      )));
-     */
 
     public function getAllDocuments($args) {
         if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
@@ -179,7 +169,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
 
         $editor = (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT)) ? " OR 1=1" : '';
 
-        $where = ($categoriesString != '') ? '(' . $categoriesString . ") AND ($c[validated] = 1 OR $c[cr_uid]=$uid $editor)" : "$c[validated] = 1 OR $c[cr_uid] = $uid $editor";
+        $where = ($categoriesString != '') ? '(' . $categoriesString . ") AND ($c[validated] = 1 OR $c[cr_uid]=$uid $editor) AND $c[versioned] <= 0" : "($c[validated] = 1 OR $c[cr_uid] = $uid $editor) AND $c[versioned] <= 0";
 
         $orderby = '';
 
@@ -199,10 +189,10 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         $table = DBUtil::getTables();
         $c = $table['IWdocmanager_column'];
 
-        $where = "$c[categoryId] = $args[categoryId] AND $c[validated] = 1";
+        $where = "$c[categoryId] = $args[categoryId] AND $c[validated] = 1 AND $c[versioned] <= 0";
         $number = DBUtil::selectObjectCount('IWdocmanager', $where);
 
-        $where = "$c[categoryId] = $args[categoryId] AND $c[validated] = 0";
+        $where = "$c[categoryId] = $args[categoryId] AND $c[validated] = 0 AND $c[versioned] <= 0";
         $number1 = DBUtil::selectObjectCount('IWdocmanager', $where);
 
         $c = $table['IWdocmanager_categories_column'];
@@ -233,6 +223,30 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         $where = "$c[documentId] = $args[documentId] AND $c[cr_uid] = $uid AND $c[validated] = $validated";
 
         $item = array('fileName' => $args['fileName']);
+
+        if (!DBUtil::updateObject($item, 'IWdocmanager', $where)) {
+            return LogUtil::registerError($this->__('Error! Update attempt failed.'));
+        }
+        return true;
+    }
+
+    public function setAsVersioned($args) {
+        // Security check
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
+            return LogUtil::registerPermissionError();
+        }
+        $table = DBUtil::getTables();
+        $c = $table['IWdocmanager_column'];
+
+        $uid = UserUtil::getVar('uid');
+
+        $where = "$c[documentId] = $args[documentId]";
+
+        // if the versions of the document is not validated set the versioned field in negative
+        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADD))
+            $args['versioned'] = $args['versioned'] * -1;
+
+        $item = array('versioned' => $args['versioned']);
 
         if (!DBUtil::updateObject($item, 'IWdocmanager', $where)) {
             return LogUtil::registerError($this->__('Error! Update attempt failed.'));
@@ -322,6 +336,17 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         if (!DBUtil::updateObject($item, 'IWdocmanager', $where)) {
             return LogUtil::registerError($this->__('Error! Update attempt failed.'));
         }
+
+        $negative = $args['documentId'] * -1;
+
+        $where = "$c[versioned] = $negative";
+
+        $item = array('versioned' => $args['documentId']);
+
+        if (!DBUtil::updateObject($item, 'IWdocmanager', $where)) {
+            return LogUtil::registerError($this->__('Error! Update attempt failed.'));
+        }
+
         return true;
     }
 
@@ -329,7 +354,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         // get document
         $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $args['documentId']));
         if (!$document) {
-            return LogUtil::registerError($update['msg'] . ' ' . $this->__('Document not found.'));
+            return LogUtil::registerError($this->__('Document not found.'));
         }
 
         // the documents only can be deleted by people with DELETE_ACCESS to the module or by creators during the time defined in the module configuration

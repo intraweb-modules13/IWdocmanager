@@ -233,12 +233,11 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
         if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_DELETE) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('deleteTime') * 30 < time())) {
             throw new Zikula_Exception_Fatal($this->__('Sorry! No authorization to access this module.'));
         }
-        
+
         $deleted = ModUtil::apiFunc($this->name, 'user', 'deleteDocument', array('documentId' => $documentId));
         if (!$deleted) {
             throw new Zikula_Exception_Fatal($this->__('Error! Delete document failed.'));
         }
-
 
         if ($document['fileName'] != '') {
             // download the document
@@ -254,6 +253,51 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
 
         $content = ModUtil::func($this->name, 'user', 'getDocumentsContent', array('categoryId' => $document['categoryId']));
 
+        return new Zikula_Response_Ajax(array('content' => $content,
+                ));
+    }
+
+    public function viewDocumentVersions($args) {
+        $documentId = $this->request->getPost()->get('documentId', '');
+        if (!$documentId) {
+            throw new Zikula_Exception_Fatal($this->__('no document id'));
+        }
+
+        // get document
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
+        if (!$document) {
+            throw new Zikula_Exception_Fatal($this->__('Document not found.'));
+        }
+
+        // check if user can access to this category
+        $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $document['categoryId'],
+                    'accessType' => 'read',
+                ));
+
+        $content = ModUtil::func($this->name, 'user', 'viewDocumentVersions', array('documentId' => $documentId));
+
+        return new Zikula_Response_Ajax(array('content' => $content,
+                ));
+    }
+
+    public function viewDocuments($args) {
+        $documentId = $this->request->getPost()->get('documentId', '');
+        if (!$documentId) {
+            throw new Zikula_Exception_Fatal($this->__('no document id'));
+        }
+
+        // get document
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
+        if (!$document) {
+            throw new Zikula_Exception_Fatal($this->__('Document not found.'));
+        }
+
+        // check if user can access to this category
+        $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $document['categoryId'],
+                    'accessType' => 'read',
+                ));
+
+        $content = ModUtil::func($this->name, 'user', 'getDocumentsContent', array('categoryId' => $document['categoryId']));
         return new Zikula_Response_Ajax(array('content' => $content,
                 ));
     }

@@ -127,6 +127,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         }
 
         $document = array('documentId' => 0,
+            'newVersion' => 0,
             'documentName' => '',
             'description' => '',
             'version' => '',
@@ -143,6 +144,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
                         ->assign('extensions', $extensions)
                         ->assign('categories', $categories)
                         ->assign('categoryId', $categoryId)
+                        ->assign('newVersion', 0)
                         ->fetch('IWdocmanager_user_addEditDoc.tpl');
     }
 
@@ -217,7 +219,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         $version = FormUtil::getPassedValue('version', isset($args['version']) ? $args['version'] : null, 'POST');
         $authorName = FormUtil::getPassedValue('authorName', isset($args['authorName']) ? $args['authorName'] : null, 'POST');
         $description = FormUtil::getPassedValue('description', isset($args['description']) ? $args['description'] : null, 'POST');
-
+        $documentId = FormUtil::getPassedValue('documentId', isset($args['documentId']) ? $args['documentId'] : 0, 'POST'); // in case it is a new version
         // Security check
         if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
             return LogUtil::registerPermissionError();
@@ -232,6 +234,22 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         if (!$canAccess) {
             LogUtil::registerError($this->__('You can not add documents to this category'));
             return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
+        }
+
+        if ($documentId > 0) {
+            // get document
+            $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
+            if (!$document) {
+                return LogUtil::registerError($this->__('Document not found.'));
+            }
+            $versionFrom = $document['versionFrom'] . '$' . $documentId . '$';
+            // protectionn. Only validated and not versioned documents can be versioned
+            if ($document['validated'] == 0 || $document['versioned'] > 0) {
+                LogUtil::registerError($this->__('It is not possible to create a version of this document.'));
+                return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs', array('categoryId' => $document['categoryId'])));
+            }
+        } else {
+            $versionFrom = '';
         }
 
         if ($documentFile['name'] != '') {
@@ -255,6 +273,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
                     'authorName' => $authorName,
                     'description' => $description,
                     'fileOriginalName' => str_replace($extension, '', DataUtil::formatPermalink($documentFile['name'])),
+                    'versionFrom' => $versionFrom,
                 ));
 
         if (!$created) {
@@ -282,6 +301,13 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
             }
         }
 
+        // set original document as versioned only if the document is set as validated (ACCESS_ADD permissions)
+        if ($documentId > 0) {
+            ModUtil::apiFunc($this->name, 'user', 'setAsVersioned', array('documentId' => $documentId,
+                'versioned' => $created,
+            ));
+        }
+
         // upload the number of documents in category
         ModUtil::apiFunc($this->name, 'user', 'countDocuments', array('categoryId' => $categoryId));
 
@@ -296,16 +322,33 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
 
     public function editDocument($args) {
         $documentId = FormUtil::getPassedValue('documentId', isset($args['documentId']) ? $args['documentId'] : 0, 'GET');
+        $newVersion = FormUtil::getPassedValue('newVersion', isset($args['newVersion']) ? $args['newVersion'] : 0, 'GET');
 
         // get document
         $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
         if (!$document) {
-            return LogUtil::registerError($update['msg'] . ' ' . $this->__('Document not found.'));
+            return LogUtil::registerError($this->__('Document not found.'));
         }
 
-        // the documents only can be edited by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
-        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 < time())) {
-            return LogUtil::registerPermissionError();
+        if ($newVersion == 0) {
+            // the documents only can be edited by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
+            if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 < time())) {
+                return LogUtil::registerPermissionError();
+            }
+        } else {
+            // check if user can access to this category
+            $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $document['categoryId'],
+                        'accessType' => 'add'));
+            if (!$canAccess) {
+                LogUtil::registerError($this->__('You can not add documents to this category'));
+                return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
+            }
+
+            // protectionn. Only validated and not versioned documents can be versioned
+            if ($document['validated'] == 0 || $document['versioned'] > 0) {
+                LogUtil::registerError($this->__('It is not possible to create a version of this document.'));
+                return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs', array('categoryId' => $document['categoryId'])));
+            }
         }
 
         $categories = ModUtil::Func($this->name, 'user', 'getUserCategories', array('accessType' => 'add'));
@@ -314,12 +357,15 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
 
         $fileExtension = ($document['fileName'] != '') ? FileUtil::getExtension($document['fileName']) : '';
 
+        $function = ($newVersion) ? 'createDoc' : 'updateDoc';
+
         return $this->view->assign('document', $document)
-                        ->assign('function', 'updateDoc')
+                        ->assign('function', $function)
                         ->assign('extensions', $extensions)
                         ->assign('categories', $categories)
                         ->assign('categoryId', $document['categoryId'])
                         ->assign('fileExtension', $fileExtension)
+                        ->assign('newVersion', $newVersion)
                         ->fetch('IWdocmanager_user_addEditDoc.tpl');
     }
 
@@ -331,6 +377,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         $version = FormUtil::getPassedValue('version', isset($args['version']) ? $args['version'] : null, 'POST');
         $authorName = FormUtil::getPassedValue('authorName', isset($args['authorName']) ? $args['authorName'] : null, 'POST');
         $description = FormUtil::getPassedValue('description', isset($args['description']) ? $args['description'] : null, 'POST');
+        $newVersion = FormUtil::getPassedValue('newVersion', isset($args['newVersion']) ? $args['newVersion'] : 0, 'POST');
 
         // Security check
         if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
@@ -343,7 +390,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         // get document
         $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
         if (!$document) {
-            return LogUtil::registerError($update['msg'] . ' ' . $this->__('Document not found.'));
+            return LogUtil::registerError($this->__('Document not found.'));
         }
 
         // the documents only can be edited by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
@@ -389,7 +436,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         // get document
         $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
         if (!$document) {
-            return LogUtil::registerError($update['msg'] . ' ' . $this->__('Document not found.'));
+            return LogUtil::registerError($this->__('Document not found.'));
         }
 
         // check if user can access to this category
@@ -398,7 +445,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
                 ));
 
         if (!$canAccess) {
-            return LogUtil::registerError($update['msg'] . ' ' . $this->__('You can not access to this document.'));
+            return LogUtil::registerError($this->__('You can not access to this document.'));
         }
 
         // download the document
@@ -432,6 +479,28 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         header("Content-Length: " . $fileSize);
         @readfile($documentPath);
         return true;
+    }
+
+    public function viewDocumentVersions($args) {
+        $documentId = FormUtil::getPassedValue('documentId', isset($args['documentId']) ? $args['documentId'] : 0, 'GET');
+
+        // get document
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
+        if (!$document) {
+            return LogUtil::registerError($this->__('Document not found.'));
+        }
+
+        // check if user can access to this category
+        $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $document['categoryId'],
+                    'accessType' => 'read',
+                ));
+
+        if (!$canAccess) {
+            return LogUtil::registerError($this->__('You can not access to this document.'));
+        }
+
+        return $this->view->assign('document', $document)
+                        ->fetch('IWdocmanager_user_viewDocumentVersions.tpl');
     }
 
 }

@@ -1,13 +1,18 @@
 {include file="IWdocmanager_user_menu.htm"}
 <h2>
     {if $document.documentId gt 0}
+    {if $newVersion eq 1}
+    {gt text="New version of the document"}: {$document.documentName}
+    {else}
     {gt text="Edit the document"}: {$document.documentName}
+    {/if}
     {else}
     {gt text="Add a new document"}
     {/if}
 </h2>
 <form  class="z-form" enctype="multipart/form-data" method="post" id="addEdit" action="{modurl modname='IWdocmanager' type='user' func=$function}">
     <input type="hidden" name="documentId" value="{$document.documentId}" />
+    <input type="hidden" name="newVersion" value="{$newVersion}" />
     <input type="hidden" name="csrftoken" value="{insert name='csrftoken'}" />
     <div class="z-formrow">
         <label for="documentName">{gt text="Document name"}</label>
@@ -22,18 +27,28 @@
             {/foreach}
         </select>
     </div>
+    {if $document.documentId gt 0}
+    {if $document.fileOriginalName neq ''}
     <div class="z-formrow">
-        {if $document.documentId gt 0}
-        {if $document.fileOriginalName neq ''}
-        <label for="documentFile">{gt text="File"}</label>
+        <label for="documentFile">{if $newVersion}{gt text="Current file"}{else}{gt text="File"}{/if}</label>
         <div class="z-formnote">
             <strong>{$document.fileOriginalName}.{$fileExtension}</strong>
         </div>
-        {else}
+    </div>
+    {if $newVersion}
+    <div class="z-formrow">
+        <label for="documentFile">{gt text="New version file"}</label>
+        <input type="file" id="documentFile" name="documentFile" value="" />
+    </div>
+    {/if}
+    {else}
+    <div class="z-formrow">
         <label for="documentFile">{gt text="File link"}</label>
         <input type="text" id="documentLink" name="documentLink" size="70" value="{$document.documentLink}" />
-        {/if}
-        {else}
+    </div>
+    {/if}
+    {else}
+    <div class="z-formrow">
         <label for="documentFile">{gt text="File"}</label>
         <input type="file" id="documentFile" name="documentFile" value="" />
         <div class="z-formnote">
@@ -42,11 +57,23 @@
         <div class="z-formnote z-informationmsg">
             {gt text="Possible extensions"}: {$extensions}
         </div>
-        {/if}
     </div>
+    {/if}
+    {if $newVersion eq 1}
     <div class="z-formrow">
-        <label for="version">{gt text="Version"}</label>
-        <input type="text" id="version" name="version" value="{$document.version}" />
+        <label for="version">{gt text="Current version"}</label>
+        <div class="z-formnote">
+            {if $document.version neq ''}
+            {$document.version}
+            {else}
+            {gt text="No version given"}
+            {/if}
+        </div>
+    </div>
+    {/if}
+    <div class="z-formrow">
+        <label for="version">{if $newVersion eq 1}{gt text="New version"}{else}{gt text="Version"}{/if}</label>
+        <input type="text" id="version" name="version" value="{if $newVersion eq 0}{$document.version}{/if}" />
     </div>
     <div class="z-formrow">
         <label for="authorName">{gt text="Author"}</label>

@@ -239,3 +239,47 @@ function deleteDocument_response(a){
     
     $("documentsContent").update(b.content);
 }
+
+function viewDocumentVersions(a){
+    var b={
+        documentId:a
+    };
+       
+    var c=new Zikula.Ajax.Request(Zikula.Config.baseURL+"ajax.php?module=IWdocmanager&func=viewDocumentVersions",{
+        parameters: b,
+        onComplete: viewDocumentVersions_response,
+        onFailure: failure
+    });
+}
+
+function viewDocumentVersions_response(a){
+    if(!a.isSuccess()){
+        Zikula.showajaxerror(a.getMessage());
+        return
+    }
+    var b=a.getData();
+    
+    $("documentsContent").update(b.content);
+}
+
+function viewDocuments(a){
+    var b={
+        documentId:a
+    };
+
+    var c=new Zikula.Ajax.Request(Zikula.Config.baseURL+"ajax.php?module=IWdocmanager&func=viewDocuments",{
+        parameters: b,
+        onComplete: viewDocuments_response,
+        onFailure: failure
+    });
+}
+
+function viewDocuments_response(a){
+    if(!a.isSuccess()){
+        Zikula.showajaxerror(a.getMessage());
+        return
+    }
+    var b=a.getData();
+    
+    $("documentsContent").update(b.content);
+}
