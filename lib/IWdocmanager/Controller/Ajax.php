@@ -170,7 +170,9 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
         // count click on document record
         ModUtil::apiFunc($this->name, 'user', 'countClick', array('documentId' => $documentId));
 
-        return new Zikula_Response_Ajax(array('href' => $document['documentLink'],
+        $content = ModUtil::func($this->name, 'user', 'getDocumentsContent', array('categoryId' => $document['categoryId']));
+
+        return new Zikula_Response_Ajax(array('content' => $content,
                 ));
     }
 

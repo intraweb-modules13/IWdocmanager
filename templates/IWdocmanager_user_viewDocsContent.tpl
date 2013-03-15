@@ -63,7 +63,7 @@
                     {img modname='core' src='download.png' set='icons/extrasmall' __alt='Download'}
                 </a>
                 {elseif $document.documentLink neq ''}
-                <a class="z-pointer" onClick="openDocumentLink({$document.documentId});">
+                <a href="{$document.documentLink}" target="_blank" onClick="openDocumentLink({$document.documentId});">
                     {img modname='core' src='web.png' set='icons/extrasmall' __alt='Browse website'}
                 </a>
                 {/if}

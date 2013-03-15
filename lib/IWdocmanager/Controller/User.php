@@ -463,7 +463,6 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         $ctypeArray = ModUtil::func('IWmain', 'user', 'getMimetype', array('extension' => $fileExtension));
         $ctype = $ctypeArray['type'];
 
-
         //Begin writing headers
         header("Pragma: public");
         header("Expires: 0");
@@ -478,6 +477,10 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: " . $fileSize);
         @readfile($documentPath);
+
+        // count click on document record
+        ModUtil::apiFunc($this->name, 'user', 'countClick', array('documentId' => $documentId));
+
         return true;
     }
 

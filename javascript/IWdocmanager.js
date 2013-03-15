@@ -188,7 +188,7 @@ function openDocumentLink_response(a){
         return
     }
     var b=a.getData();
-    document.location.href=b.href;
+    $("documentsContent").update(b.content);
 }
 
 function validateDocument(a){
