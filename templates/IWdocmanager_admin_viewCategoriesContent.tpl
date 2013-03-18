@@ -1,6 +1,9 @@
 {if $categories|@count gt 0}
 <div class="tablehead IWdocmanager_item" style="padding-left: 7px;">
     <div class="IWdocmanager_left">
+        <div class="IWdocmanager_categoryId">
+            {gt text="Id"}
+        </div>
         <div class="IWdocmanager_main">
             {gt text="Nom de la categoria"}
             <div class="IWdocmanager_description">
@@ -22,6 +25,9 @@
 {foreach item=category from=$categories}
 <div id="categoryId_{$category.categoryId}">
     <div class="IWdocmanager_item {if $category.active eq 1}IWdocmanager_active{else}IWdocmanager_inactive{/if}">
+        <div class="IWdocmanager_categoryId">
+            {$category.categoryId}
+        </div>
         <div class="IWdocmanager_left" style="padding-left:{$category.padding};">
             {if $category.level neq ''}
             <div class="IWdocmanager_level">

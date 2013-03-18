@@ -100,8 +100,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
                     'accessType' => 'add',
                 ));
         if (!$canAccess) {
-            LogUtil::registerError($this->__('You can not add documents to this category'));
-            return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
+            return LogUtil::registerError($this->__('You can not add documents to this category'));
         }
 
         $validated = (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADD)) ? 1 : 0;
@@ -134,7 +133,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         }
 
         // the documents only can be edited by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
-        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 < time())) {
+        if (!SecurityUtil::checkPermission('IWdocmanager::', "$document[categoryId]::", ACCESS_EDIT) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 < time())) {
             return LogUtil::registerPermissionError();
         }
 
@@ -303,8 +302,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
                     'accessType' => 'read',
                 ));
         if (!$canAccess) {
-            LogUtil::registerError($this->__('You can not add documents to this category'));
-            return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
+            return LogUtil::registerError($this->__('You can not add documents to this category'));
         }
 
         $table = DBUtil::getTables();
@@ -358,7 +356,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         }
 
         // the documents only can be deleted by people with DELETE_ACCESS to the module or by creators during the time defined in the module configuration
-        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_DELETE) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('deleteTime') * 30 < time())) {
+        if (!SecurityUtil::checkPermission('IWdocmanager::', "$document[categoryId]::", ACCESS_DELETE) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('deleteTime') * 30 < time())) {
             return LogUtil::registerPermissionError();
         }
 
@@ -366,6 +364,52 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
             return LogUtil::registerError($this->__('Error! Update attempt failed.'));
         }
         return true;
+    }
+
+    public function getDocumentVersions($args) {
+        // get document
+        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $args['documentId']));
+        if (!$document) {
+            return LogUtil::registerError($this->__('Document not found.'));
+        }
+
+        // check if user can access to this category
+        $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $document['categoryId'],
+                    'accessType' => 'read',
+                ));
+        if (!$canAccess) {
+            return LogUtil::registerError($this->__('You can not add documents to this category'));
+        }
+
+        $versionsIds = explode('$$', substr($document['versionFrom'], 1, -1));
+
+        $table = DBUtil::getTables();
+        $c = $table['IWdocmanager_column'];
+
+        $where = '';
+        foreach ($versionsIds as $id) {
+            $where .= "$c[documentId]=$id OR ";
+        }
+
+        $where = substr($where, 0, strlen($where) - 4);
+
+        $uid = (UserUtil::isLoggedIn()) ? UserUtil::getVar('uid') : -1;
+
+        $editor = (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT)) ? " OR 1=1" : '';
+
+        $where = '(' . $where . ") AND ($c[validated] = 1 OR $c[cr_uid]=$uid $editor)";
+
+        $orderby = "$c[documentId]";
+
+        $items = DBUtil::selectObjectArray('IWdocmanager', $where, $orderby, '-1', '-1', 'documentId');
+
+        // Check for an error with the database code, and if so set an appropriate
+        // error message and return
+        if ($items === false) {
+            return LogUtil::registerError($this->__('Error! Could not load items.'));
+        }
+
+        return $items;
     }
 
 }

@@ -79,6 +79,9 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         $canEdit = false;
         $canDelete = false;
 
+        $canEditCategory = (SecurityUtil::checkPermission('IWdocmanager::', "$categoryId::", ACCESS_EDIT)) ? true : false;
+        $canDeleteCategory = (SecurityUtil::checkPermission('IWdocmanager::', "$categoryId::", ACCESS_DELETE)) ? true : false;
+
         foreach ($documents as $document) {
             $extensionIcon['icon'] = '';
             if ($document['fileName'] != '') {
@@ -91,15 +94,14 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
             }
             $documents[$document['documentId']]['canEdit'] = false;
             $documents[$document['documentId']]['canDelete'] = false;
-            if ($document['validated'] == 0 && UserUtil::getVar('uid') == $document['cr_uid'] && DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 > time()) {
+            if ($canEditCategory || ($document['validated'] == 0 && UserUtil::getVar('uid') == $document['cr_uid'] && DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 > time())) {
                 $documents[$document['documentId']]['canEdit'] = true;
                 $canEdit = true; // in order to show edit icon in legend
             }
 
-            if ($document['validated'] == 0 && UserUtil::getVar('uid') == $document['cr_uid'] && DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('deleteTime') * 30 > time()) {
+            if ($canDeleteCategory || ($document['validated'] == 0 && UserUtil::getVar('uid') == $document['cr_uid'] && DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('deleteTime') * 30 > time())) {
                 $documents[$document['documentId']]['canDelete'] = true;
-                $canDelete = true;
-                $canEdit = true; // in order to show delete icon in legend
+                $canDelete = true; // in order to show delete icon in legend
             }
         }
 
@@ -332,7 +334,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
 
         if ($newVersion == 0) {
             // the documents only can be edited by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
-            if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 < time())) {
+            if (!SecurityUtil::checkPermission('IWdocmanager::', "$document[categoryId]::", ACCESS_EDIT) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 < time())) {
                 return LogUtil::registerPermissionError();
             }
         } else {
@@ -347,7 +349,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
             // protectionn. Only validated and not versioned documents can be versioned
             if ($document['validated'] == 0 || $document['versioned'] > 0) {
                 LogUtil::registerError($this->__('It is not possible to create a version of this document.'));
-                return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs', array('categoryId' => $document['categoryId'])));
+                return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
             }
         }
 
@@ -390,7 +392,8 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         // get document
         $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
         if (!$document) {
-            return LogUtil::registerError($this->__('Document not found.'));
+            LogUtil::registerError($this->__('Document not found.'));
+            return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
         }
 
         // the documents only can be edited by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
@@ -488,21 +491,81 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         $documentId = FormUtil::getPassedValue('documentId', isset($args['documentId']) ? $args['documentId'] : 0, 'GET');
 
         // get document
-        $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
-        if (!$document) {
-            return LogUtil::registerError($this->__('Document not found.'));
+        $documentOrigin = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
+        if (!$documentOrigin) {
+            LogUtil::registerError($this->__('Document not found.'));
+            return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
         }
+        
+        $documentOrigin['extension'] = FileUtil::getExtension($documentOrigin['fileName']);
 
+        $categoryId = $documentOrigin['categoryId'];
+        
         // check if user can access to this category
-        $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $document['categoryId'],
+        $canAccess = ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $categoryId,
                     'accessType' => 'read',
                 ));
 
         if (!$canAccess) {
-            return LogUtil::registerError($this->__('You can not access to this document.'));
+            LogUtil::registerError($this->__('You can not access to this document.'));
+            return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
         }
 
-        return $this->view->assign('document', $document)
+        // versions
+        $documents = ModUtil::apiFunc($this->name, 'user', 'getDocumentVersions', array('documentId' => $documentId));
+
+        if (!$documents) {
+            LogUtil::registerError($this->__('This document have not versions.'));
+            return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs', array('categoryId' => $categoryId)));
+        }
+
+        $usersList = $documentOrigin['cr_uid'] . '$$';
+        $users = array();
+        $canEdit = false;
+        $canDelete = false;
+        $canAdd = false;
+
+        $canEditCategory = (SecurityUtil::checkPermission('IWdocmanager::', "$categoryId::", ACCESS_EDIT)) ? true : false;
+        $canDeleteCategory = (SecurityUtil::checkPermission('IWdocmanager::', "$categoryId::", ACCESS_DELETE)) ? true : false;
+
+        foreach ($documents as $document) {
+            $extensionIcon['icon'] = '';
+            if ($document['fileName'] != '') {
+                $extension = FileUtil::getExtension($document['fileName']);
+                $extensionIcon = ($extension != '') ? ModUtil::func('IWmain', 'user', 'getMimetype', array('extension' => $extension)) : '';
+            }
+            $documents[$document['documentId']]['extension'] = $extensionIcon['icon'];
+            if ($document['authorName'] == '') {
+                $usersList .= $document['cr_uid'] . '$$';
+            }
+            $documents[$document['documentId']]['canEdit'] = false;
+            $documents[$document['documentId']]['canDelete'] = false;
+            if ($canEditCategory || ($document['validated'] == 0 && UserUtil::getVar('uid') == $document['cr_uid'] && DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 > time())) {
+                $documents[$document['documentId']]['canEdit'] = true;
+                $canEdit = true; // in order to show edit icon in legend
+            }
+
+            if ($canDeleteCategory || ($document['validated'] == 0 && UserUtil::getVar('uid') == $document['cr_uid'] && DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('deleteTime') * 30 > time())) {
+                $documents[$document['documentId']]['canDelete'] = true;
+                $canDelete = true; // in order to show delete icon in legend
+            }
+        }
+
+        if ($usersList != '') {
+            // get all users information
+            $sv = ModUtil::func('IWmain', 'user', 'genSecurityValue');
+            $users = ModUtil::func('IWmain', 'user', 'getAllUsersInfo', array('sv' => $sv,
+                        'info' => 'ncc',
+                        'list' => $usersList));
+        }
+
+        return $this->view->assign('documentOrigin', $documentOrigin)
+                        ->assign('documents', $documents)
+                        ->assign('canAdd', $canAdd)
+                        ->assign('users', $users)
+                        ->assign('canEdit', $canEdit)
+                        ->assign('canDelete', $canDelete)
+                        ->assign('versionsVision', 1)
                         ->fetch('IWdocmanager_user_viewDocumentVersions.tpl');
     }
 

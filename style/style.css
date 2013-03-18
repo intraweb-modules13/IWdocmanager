@@ -53,6 +53,19 @@
     width: 70px;
 }
 
+.IWdocmanager_categoryId {
+    float: left;
+    width: 20px;
+    padding-left: 5px;
+    font-weight: bold;
+}
+
+.IWdocmanager_documentOrigin {
+padding: 15px;
+background-color: #BBFFBB;
+border: 1px dotted #aa0000;
+}
+
 .categoryNameList{
     float: left;
     max-width: 330px;

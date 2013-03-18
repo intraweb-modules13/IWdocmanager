@@ -177,9 +177,6 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
     }
 
     public function validateDocument($args) {
-        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT)) {
-            throw new Zikula_Exception_Fatal($this->__('Sorry! No authorization to access this module.'));
-        }
         $documentId = $this->request->getPost()->get('documentId', '');
         if (!$documentId) {
             throw new Zikula_Exception_Fatal($this->__('no document id'));
@@ -189,6 +186,10 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
         $document = ModUtil::apiFunc($this->name, 'user', 'getDocument', array('documentId' => $documentId));
         if (!$document) {
             throw new Zikula_Exception_Fatal($this->__('Document not found.'));
+        }
+        
+        if (!SecurityUtil::checkPermission('IWdocmanager::', "$document[categoryId]::", ACCESS_EDIT)) {
+            throw new Zikula_Exception_Fatal($this->__('Sorry! No authorization to access this module.'));
         }
 
         $validated = ModUtil::apiFunc($this->name, 'user', 'validateDocument', array('documentId' => $documentId));
@@ -232,7 +233,7 @@ class IWdocmanager_Controller_Ajax extends Zikula_Controller_AbstractAjax {
         }
 
         // the documents only can be deleted by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
-        if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_DELETE) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('deleteTime') * 30 < time())) {
+        if (!SecurityUtil::checkPermission('IWdocmanager::', "$document[categoryId]::", ACCESS_DELETE) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('deleteTime') * 30 < time())) {
             throw new Zikula_Exception_Fatal($this->__('Sorry! No authorization to access this module.'));
         }
 
