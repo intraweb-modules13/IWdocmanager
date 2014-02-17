@@ -6,6 +6,8 @@
     border-bottom: 1px solid #555;
     padding-top: 7px;
     padding-bottom: 7px;
+    font-size: 0.9em;
+    line-height: 1.2em;
 }
 
 #IWdocmanager_admin .IWdocmanager_active{
@@ -33,6 +35,7 @@
 .IWdocmanager_description{
     font-style:italic;
     max-width: 430px;
+    font-size: 0.85em;
 }
 
 .IWdocmanager_groups {
@@ -42,7 +45,7 @@
 }
 
 .IWdocmanager_groupsAdd {
-    padding-left:1em;
+    padding:0em 1em 0em 1em;
     float: right;
     width: 170px;
 }

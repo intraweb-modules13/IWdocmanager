@@ -1,5 +1,5 @@
 {if $categories|@count gt 0}
-<div class="tablehead IWdocmanager_item" style="padding-left: 7px;">
+<div class="tablehead IWdocmanager_item" style="padding-left: 7px; height: 30px;">
     <div class="IWdocmanager_left">
         <div class="IWdocmanager_categoryId">
             {gt text="Id"}
