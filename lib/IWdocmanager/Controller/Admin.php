@@ -28,7 +28,7 @@ class IWdocmanager_Controller_Admin extends Zikula_AbstractController {
         if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADMIN)) {
             return LogUtil::registerPermissionError();
         }
-        return System::redirect(ModUtil::url('IWdocmanager', 'admin', 'config'));
+        return System::redirect(ModUtil::url('IWdocmanager', 'admin', 'viewCategories'));
     }
 
     public function config() {

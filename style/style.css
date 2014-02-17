@@ -64,9 +64,8 @@
 }
 
 .IWdocmanager_documentOrigin {
-padding: 15px;
-background-color: #BBFFBB;
-border: 1px dotted #aa0000;
+    padding: 15px;
+    border: 1px dotted #aa0000;
 }
 
 .categoryNameList{
@@ -86,7 +85,6 @@ border: 1px dotted #aa0000;
 }
 
 .categoryListRow{
-    background-color: #BBFFBB;
     border-bottom: 1px solid #777;
     padding: 7px;
 }
@@ -112,6 +110,8 @@ border: 1px dotted #aa0000;
     font-weight: bold;
     color: #fff;
     padding-right: 7px;
+    font-size: 0.9em;
+    line-height: 1.2em;
 }
 
 .notValidatedLabel{

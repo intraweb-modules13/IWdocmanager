@@ -18,9 +18,9 @@ class IWdocmanager_Api_Admin extends Zikula_AbstractApi {
     public function getlinks() {
         $links = array();
         if (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADMIN)) {
-            $links[] = array('url' => ModUtil::url($this->name, 'admin', 'config'), 'text' => $this->__('Module configuration'), 'class' => 'z-icon-es-config');
             $links[] = array('url' => ModUtil::url($this->name, 'admin', 'viewCategories'), 'text' => $this->__('View categories'), 'class' => 'z-icon-es-view');
             $links[] = array('url' => ModUtil::url($this->name, 'admin', 'addCategory'), 'text' => $this->__('New main category'), 'class' => 'z-icon-es-new');
+            $links[] = array('url' => ModUtil::url($this->name, 'admin', 'config'), 'text' => $this->__('Module configuration'), 'class' => 'z-icon-es-config');
         }
         // return output
         return $links;

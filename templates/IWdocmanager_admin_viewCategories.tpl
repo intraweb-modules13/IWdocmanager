@@ -10,5 +10,5 @@
     </div>
 </div>
 <script>
-    var deteleText = '{{gt text="Do you really want to the detele this category"}}';
+    var deteleText = '{{gt|escape:'javascript' text="Do you really want to the detele this category"}}';
 </script>

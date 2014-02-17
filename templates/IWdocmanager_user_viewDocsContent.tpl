@@ -58,44 +58,44 @@
                 {if $authedit}
                 {if $document.fileName eq '' && $document.documentLink eq ''}
                 {assign var=uploadErrors value=1}
-                {img modname='core' src='button_cancel.png' set='icons/extrasmall' __alt='Error'}
+                {img modname='core' src='button_cancel.png' set='icons/extrasmall' __alt='Error' __title="Error during the upload process. The document should be deleted or modified."}
                 {else}
                 {if $document.validated eq 0}
                 {assign var=toValidate value=1}
                 <a class="z-pointer" onClick="validateDocument({$document.documentId});">
-                    {img modname='core' src='button_ok.png' set='icons/extrasmall' __alt='Validate'}
+                    {img modname='core' src='button_ok.png' set='icons/extrasmall' __alt='Validate' __title='Validate'}
                 </a>
                 {/if}
                 {/if}
                 {/if}
                 {if $document.fileName != ''}
                 <a href="{modurl modname='IWdocmanager' type='user' func='downloadDocument' documentId=$document.documentId}">
-                    {img modname='core' src='download.png' set='icons/extrasmall' __alt='Download'}
+                    {img modname='core' src='download.png' set='icons/extrasmall' __alt='Download' __title='Download'}
                 </a>
                 {elseif $document.documentLink neq ''}
                 <a href="{$document.documentLink}" target="_blank" onClick="openDocumentLink({$document.documentId});">
-                    {img modname='core' src='web.png' set='icons/extrasmall' __alt='Browse website'}
+                    {img modname='core' src='web.png' set='icons/extrasmall' __alt='Browse website' __title='Browse website'}
                 </a>
                 {/if}
                 {if $document.fileName neq '' AND ($canAdd || $authadd) AND $document.validated eq 1 AND $document.versioned lt 1}
                 <a href="{modurl modname='IWdocmanager' type='user' func='editDocument' documentId=$document.documentId newVersion=1}">
-                    {img modname='core' src='filenew.png' set='icons/extrasmall' __alt='New version'}
+                    {img modname='core' src='filenew.png' set='icons/extrasmall' __alt='New version' __title='New version'}
                 </a>
                 {/if}                
                 {if $authedit OR $document.canEdit}
                 <a href="{modurl modname='IWdocmanager' type='user' func='editDocument' documentId=$document.documentId}">
-                    {img modname='core' src='xedit.png' set='icons/extrasmall' __alt='Edit'}
+                    {img modname='core' src='xedit.png' set='icons/extrasmall' __alt='Edit' __title='Edit'}
                 </a>
                 {/if}
                 {if $authdelete OR $document.canDelete}
                 <a class="z-pointer" onClick="deleteDocument({$document.documentId});">
-                    {img modname='core' src='14_layer_deletelayer.png' set='icons/extrasmall' __alt='Delete'}
+                    {img modname='core' src='14_layer_deletelayer.png' set='icons/extrasmall' __alt='Delete' __title='Delete'}
                 </a>
                 {/if}
                 {if $document.versionFrom neq '' AND not isset($versionsVision)}
                 {assign var=versions value=1}
                 <a class="z-pointer" onClick="viewDocumentVersions({$document.documentId});">
-                    {img modname='core' src='mydocuments.png' set='icons/extrasmall' __alt='View versions'}
+                    {img modname='core' src='mydocuments.png' set='icons/extrasmall' __alt='View versions' __title='View versions'}
                 </a>
                 {/if}
             </td>
@@ -109,6 +109,8 @@
         {/foreach}
     </tbody>
 </table>
+
+<br />
 
 <h3>{gt text="Options legend"}</h3>
 <ul>
@@ -139,5 +141,5 @@
 </ul>
 
 <script>
-    var deteleText = '{{gt text="Confirm deletion!"}}';
+    var deteleText = '{{gt|escape:'javascript' text="Confirm deletion!"}}';
 </script>
