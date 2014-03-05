@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: Zikula 1.x\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-03-19 17:57+0100\n"
-"PO-Revision-Date: 2014-02-17 16:28+0100\n"
-"Last-Translator: Toni Ginard <toni.ginard@gmail.com>\n"
+"PO-Revision-Date: 2014-03-03 11:25+0100\n"
+"Last-Translator: jmeler <jmeler@xtec.cat>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -105,7 +105,7 @@ msgstr "Mòdul de gestió documental i control de versions."
 
 #: lib/IWdocmanager/Version.php:28
 msgid "Documents Manager"
-msgstr "Gestió de documents"
+msgstr "Documents"
 
 #: lib/IWdocmanager/Version.php:29
 msgid "documents"
