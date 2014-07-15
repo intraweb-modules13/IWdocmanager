@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: Zikula 1.x\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-03-19 17:57+0100\n"
-"PO-Revision-Date: 2014-03-03 11:25+0100\n"
-"Last-Translator: jmeler <jmeler@xtec.cat>\n"
+"PO-Revision-Date: 2014-07-15 11:50+0100\n"
+"Last-Translator: Toni Ginard <toni.ginard@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -26,7 +26,7 @@ msgstr "Mostra les categories"
 
 #: lib/IWdocmanager/Api/Admin.php:23
 msgid "New main category"
-msgstr "Nova categoria principal"
+msgstr "Categoria principal nova"
 
 #: lib/IWdocmanager/Api/Admin.php:45
 #: lib/IWdocmanager/Api/User.php:120
@@ -66,12 +66,12 @@ msgstr "Administra"
 #: lib/IWdocmanager/Api/User.php:273
 #: lib/IWdocmanager/Api/User.php:409
 msgid "Error! Could not load items."
-msgstr "No s'han pogut carregar els ítems."
+msgstr "No s'han pogut carregar els elements"
 
 #: lib/IWdocmanager/Api/User.php:62
 #: lib/IWdocmanager/Api/User.php:265
 msgid "Error! Could not do what you wanted. Please check your input."
-msgstr "No ha estat possible fer el que desitgeu. Comproveu la vostra entrada."
+msgstr "No ha estat possible fer el que volíeu. Comproveu la vostra entrada."
 
 #: lib/IWdocmanager/Api/User.php:103
 #: lib/IWdocmanager/Api/User.php:305
@@ -113,7 +113,7 @@ msgstr "documents"
 
 #: lib/IWdocmanager/Installer.php:23
 msgid "Module IWmain is required. You have to install the IWmain module previously to install it."
-msgstr "El mòdul IWmain és requerit. Abans d'instal·lar aquest mòdul heu d'intal·lar el mòdul IWmain."
+msgstr "El mòdul IWmain és requerit. Abans d'instal·lar aquest mòdul heu d'instal·lar el mòdul IWmain."
 
 #: lib/IWdocmanager/Controller/Ajax.php:7
 #: lib/IWdocmanager/Controller/Ajax.php:24
@@ -141,15 +141,15 @@ msgstr "No és possible esborrar aquesta categoria perquè té subcategories. Pr
 
 #: lib/IWdocmanager/Controller/Ajax.php:59
 msgid "Error deleting the category"
-msgstr "S'ha produït un error en l'esborrament de la categoria"
+msgstr "S'ha produït un error en esborrar la categoria"
 
 #: lib/IWdocmanager/Controller/Ajax.php:97
 msgid "Error creating the category"
-msgstr "S'ha produït un error en la creació de la categoria"
+msgstr "S'ha produït un error en crear la categoria"
 
 #: lib/IWdocmanager/Controller/Ajax.php:137
 msgid "Error updating the category"
-msgstr "S'ha produït un error en l'edició de la categoria"
+msgstr "S'ha produït un error en editar la categoria"
 
 #: lib/IWdocmanager/Controller/Ajax.php:152
 #: lib/IWdocmanager/Controller/Ajax.php:182
@@ -176,7 +176,7 @@ msgstr "L'esborrament del document ha fallat."
 
 #: lib/IWdocmanager/Controller/Admin.php:97
 msgid "The configuration has been updated"
-msgstr "La configuració ha estat actualitzada"
+msgstr "S'ha actualitzat la configuració"
 
 #: lib/IWdocmanager/Controller/Admin.php:126
 #: lib/IWdocmanager/Controller/Admin.php:202
@@ -217,11 +217,11 @@ msgstr "S'ha produït un error en pujar el document en el servidor"
 
 #: lib/IWdocmanager/Controller/User.php:297
 msgid "An error has occurred in the attachment of the file. The document not has been send."
-msgstr "S'ha produït un error en la pujada del fitxer al servidor. El document no ha estat enviat."
+msgstr "S'ha produït un error en la pujada del fitxer al servidor. No s'ha enviat el document"
 
 #: lib/IWdocmanager/Controller/User.php:316
 msgid "The document has been uploaded successfuly"
-msgstr "El document ha estat enviat correctament"
+msgstr "S'ha enviat el document correctament"
 
 #: lib/IWdocmanager/Controller/User.php:318
 msgid " and it is pending of validation"
@@ -229,11 +229,11 @@ msgstr "i està pendent de ser validat"
 
 #: lib/IWdocmanager/Controller/User.php:414
 msgid "Error: editing document"
-msgstr "S'ha produït un error en l'edició del document"
+msgstr "S'ha produït un error en editar el document"
 
 #: lib/IWdocmanager/Controller/User.php:418
 msgid "The document has been edited successfully"
-msgstr "El document ha estat editat correctament"
+msgstr "S'ha editat el document correctament"
 
 #: lib/IWdocmanager/Controller/User.php:518
 msgid "This document have not versions."
@@ -314,7 +314,7 @@ msgstr "Versió"
 #: templates/IWdocmanager_user_viewDocsContent.tpl:13
 #: templates/IWdocmanager_user_viewDocumentVersions.tpl:18
 msgid "Author"
-msgstr "Autor"
+msgstr "Autor/a"
 
 #: templates/IWdocmanager_user_addEditDoc.tpl:82
 msgid "Leave blank if the author is the same person who add the new document"
@@ -451,7 +451,7 @@ msgstr "Llegenda de les opcions"
 
 #: templates/IWdocmanager_user_viewDocsContent.tpl:116
 msgid "Error during the upload process. The document should be deleted or modified."
-msgstr "Error durant el procés de càrrega. El document hauria de ser esborrat o modificat."
+msgstr "S'ha produït un error durant el procés de càrrega. El document hauria de ser esborrat o modificat."
 
 #: templates/IWdocmanager_user_viewDocsContent.tpl:119
 msgid "Download document"
@@ -491,7 +491,7 @@ msgstr "Els usuaris amb accés d'edició al mòdul IWdocmanager poden veure i af
 
 #: templates/IWdocmanager_admin_viewCategories.tpl:13
 msgid "Do you really want to the detele this category"
-msgstr "Voleu realment esborrar aquesta categoria?"
+msgstr "Esteu segur/a de voler esborrar aquesta categoria?"
 
 #: templates/IWdocmanager_admin_config.tpl:4
 msgid "Configure the module"
@@ -515,11 +515,11 @@ msgstr "No s'ha pogut trobar el directori dels documents"
 
 #: templates/IWdocmanager_admin_config.tpl:25
 msgid "You should give write permissions in this folder"
-msgstr "Heu de donar permisis d'escriptura a aquest directori"
+msgstr "Heu de donar permisos d'escriptura a aquest directori"
 
 #: templates/IWdocmanager_admin_config.tpl:29
 msgid "E-mail new entries notification"
-msgstr "Correu electrònic on cal enviar notificacins sobre documents nous"
+msgstr "Correu electrònic on cal enviar notificacions sobre documents nous"
 
 #: templates/IWdocmanager_admin_config.tpl:33
 msgid "Minutes while the user who has sended a document can edit it"
