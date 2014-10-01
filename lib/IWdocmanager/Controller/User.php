@@ -38,20 +38,23 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
             return LogUtil::registerPermissionError();
         }
 
-        $directoriroot = ModUtil::getVar('IWmain', 'documentRoot');
-        $documentsFolder = $this->getVar('documentsFolder');
+        $subCategories = ModUtil::Func($this->name, 'user', 'getUserCategories', array('accessType' => 'read', 'parentId' => $categoryId));
 
-        $categories = ModUtil::Func($this->name, 'user', 'getUserCategories', array('accessType' => 'read'));
+        $allCategories = ModUtil::Func($this->name, 'user', 'getUserCategories', array('accessType' => 'read'));
+        $categoryPathLinks = $allCategories[$categoryId]['categoryPathLinks'];
 
         if ($categoryId > 0) {
             $documentsContent = ModUtil::func($this->name, 'user', 'getDocumentsContent', array('categoryId' => $categoryId));
+            $currentCat = ModUtil::apiFunc($this->name, 'user', 'getCategory', array('categoryId' => $categoryId));
         } else {
             $documentsContent = '';
+            $currentCat = '';
         }
-
+        
         return $this->view->assign('documentsContent', $documentsContent)
-                        ->assign('categories', $categories)
+                        ->assign('categories', $subCategories)
                         ->assign('categoryId', $categoryId)
+                        ->assign('categoryPathLinks', $categoryPathLinks)
                         ->fetch('IWdocmanager_user_viewDocs.tpl');
     }
 
