@@ -45,11 +45,11 @@ class IWdocmanager_Controller_Admin extends Zikula_AbstractController {
 
         $noFolder = false;
         $noWriteable = false;
-        if (!file_exists(ModUtil::getVar('IWmain', 'documentRoot') . '/' . $documentsFolder) ||
-                ModUtil::getVar('IWforms', 'attached') == '') {
+        if (!file_exists($directoriroot . '/' . $documentsFolder) ||
+                $documentsFolder == '') {
             $noFolder = true;
         } else {
-            $noWriteable = (!is_writeable(ModUtil::getVar('IWmain', 'documentRoot') . '/' . $documentsFolder)) ? true : false;
+            $noWriteable = (!is_writeable($directoriroot . '/' . $documentsFolder)) ? true : false;
         }
 
         $multizk = (isset($GLOBALS['ZConfig']['Multisites']['multi']) && $GLOBALS['ZConfig']['Multisites']['multi'] == 1) ? 1 : 0;
