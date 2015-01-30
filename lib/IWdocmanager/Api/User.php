@@ -10,7 +10,7 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
             $links[] = array('url' => ModUtil::url($this->name, 'user', 'viewDocs'), 'text' => $this->__('View documents'), 'class' => 'z-icon-es-view');
         }
         $categories = ModUtil::Func($this->name, 'user', 'getUserCategories', array('accessType' => 'add'));
-
+        
         if (!empty($categories)) {
             // check if user can access to this category
             if (!ModUtil::func($this->name, 'user', 'canAccessCategory', array('categoryId' => $categoryId,
@@ -137,12 +137,12 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
         if (!SecurityUtil::checkPermission('IWdocmanager::', "$document[categoryId]::", ACCESS_EDIT) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 < time())) {
             return LogUtil::registerPermissionError();
         }
-
+        
         $table = DBUtil::getTables();
         $c = $table['IWdocmanager_column'];
 
         $where = "$c[documentId] = $args[documentId]";
-
+        
         if (!DBUtil::updateObject($args['item'], 'IWdocmanager', $where)) {
             return LogUtil::registerError($this->__('Error! Update attempt failed.'));
         }
@@ -191,19 +191,51 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
 
         $where = "$c[categoryId] = $args[categoryId] AND $c[validated] = 1 AND $c[versioned] <= 0";
         $number = DBUtil::selectObjectCount('IWdocmanager', $where);
-
+        
         $where = "$c[categoryId] = $args[categoryId] AND $c[validated] = 0 AND $c[versioned] <= 0";
         $number1 = DBUtil::selectObjectCount('IWdocmanager', $where);
-
+        
         $c = $table['IWdocmanager_categories_column'];
 
         $where = "$c[categoryId] = $args[categoryId]";
-
+        
         $item = array('nDocuments' => $number,
             'nDocumentsNV' => $number1
         );
 
         DBUtil::updateObject($item, 'IWdocmanager_categories', $where);
+
+        return true;
+    }
+    
+    public function countDocumentsUpdate($args) {
+        $table = DBUtil::getTables();
+        $c = $table['IWdocmanager_column'];
+
+        $where = "$c[categoryId] = $args[categoryId] AND $c[validated] = 1 AND $c[versioned] <= 0";
+        $whereAnterior = "$c[categoryId] = $args[categoryIdPrevi] AND $c[validated] = 1 AND $c[versioned] <= 0";
+        $number = DBUtil::selectObjectCount('IWdocmanager', $where);
+        $numberAnterior = DBUtil::selectObjectCount('IWdocmanager', $whereAnterior);
+        
+        $where = "$c[categoryId] = $args[categoryId] AND $c[validated] = 0 AND $c[versioned] <= 0";
+        $whereAnterior = "$c[categoryId] = $args[categoryIdPrevi] AND $c[validated] = 0 AND $c[versioned] <= 0";
+        $number1 = DBUtil::selectObjectCount('IWdocmanager', $where);
+        $number1Anterior = DBUtil::selectObjectCount('IWdocmanager', $whereAnterior);
+        
+        $c = $table['IWdocmanager_categories_column'];
+
+        $where = "$c[categoryId] = $args[categoryId]";
+        $whereAnterior = "$c[categoryId] = $args[categoryIdPrevi]";
+                
+        $item = array('nDocuments' => $number,
+            'nDocumentsNV' => $number1
+        );
+        $itemAnterior = array('nDocuments' => $numberAnterior,
+            'nDocteriorumentsNV' => $number1Anterior
+        );
+        
+        DBUtil::updateObject($item, 'IWdocmanager_categories', $where);
+        DBUtil::updateObject($itemAnterior, 'IWdocmanager_categories', $whereAnterior);
 
         return true;
     }

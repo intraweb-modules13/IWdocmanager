@@ -184,7 +184,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
 
         $categoryData = array();
         $categories = ModUtil::apiFunc($this->name, 'user', 'getAllCategories', array('parentId' => $parentId));
-
+        
         foreach ($categories as $category) {
 
             $groups = ($accessType == 'read') ? unserialize($category['groups']) : unserialize($category['groupsAdd']);
@@ -231,7 +231,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_READ)) {
             return LogUtil::registerPermissionError();
         }
-
+        
         // Confirm authorisation code
         $this->checkCsrfToken();
 
@@ -421,7 +421,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
             LogUtil::registerError($this->__('Document not found.'));
             return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
         }
-
+        
         // the documents only can be edited by people with EDIT_ACCESS to the module or by creators during the time defined in the module configuration
         if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT) && ($document['validated'] == 1 || UserUtil::getVar('uid') != $document['cr_uid'] || DateUtil::makeTimestamp($document['cr_date']) + $this->getVar('editTime') * 30 < time())) {
             return LogUtil::registerPermissionError();
@@ -435,11 +435,13 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
                         'authorName' => $authorName,
                         'description' => $description,
                         )));
-
         if (!$edited) {
             LogUtil::registerError($this->__('Error: editing document'));
             return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs', array('categoryId' => $categoryId)));
         }
+        
+        // upload the number of documents in category
+        ModUtil::apiFunc($this->name, 'user', 'countDocumentsUpdate', array('categoryId' => $categoryId, 'categoryIdPrevi' => $document['categoryId']));
 
         LogUtil::registerStatus($this->__('The document has been edited successfully'));
 

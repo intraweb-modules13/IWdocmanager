@@ -211,6 +211,20 @@ class IWdocmanager_Controller_Admin extends Zikula_AbstractController {
                         ->assign('groups', $groups)
                         ->fetch($template);
     }
+    
+    /**
+     * Update the number of documents when the admin wants.
+     * 
+     * @author: Víctor Saavedra Martínez (vsaavedr@xtec.cat)
+     */
+    public function syncDocumentsNumber() {
+    	// Security check
+    	if (!SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_ADMIN)) {
+    		return LogUtil::registerPermissionError();
+    	}
+    	$sync = ModUtil::apiFunc($this->name, 'admin', 'syncDocumentsNumber');
+    	return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
+    }
 
     public function createCategory($args) {
         $categoryName = FormUtil::getPassedValue('categoryName', isset($args['categoryName']) ? $args['categoryName'] : null, 'POST');
