@@ -76,98 +76,108 @@ function deleteCategory_response(a){
     $("categoryId_" + b.categoryId).update('');
 }
 
-function createCategory(a){
-    var f = document.forms['add_' + a];
-    var aa = f.categoryName.value;
-    var aaa = f.description.value;
-    var aaaa = f.active.value;
-    var aaaaa = '';
-    var aaaaaa = '';
+function createCategory(categoryId){
+    var form = document.forms['add_' + categoryId];
+    var categoryName = form.categoryName.value;
+    var categoryDescription = form.description.value;
+    var categoryGroups = '';
+    var categoryGroupsAdd = '';
 
-    var groups = f.elements['groups[]'];
+    if(form.active.checked) {
+        categoryActive = '1';
+    } else {
+        categoryActive = '0';
+    }
+
+    var groups = form.elements['groups[]'];
     for (var i = 0; i < groups.length; i++) {
         if (groups[i].checked) {
-            aaaaa = aaaaa + '$' + groups[i].value + '$';
+            categoryGroups = categoryGroups + '$' + groups[i].value + '$';
         }
     }
 
-    var groupsAdd = f.elements['groupsAdd[]'];
+    var groupsAdd = form.elements['groupsAdd[]'];
     for (var j = 0; j < groupsAdd.length; j++) {
         if (groupsAdd[j].checked) {
-            aaaaaa = aaaaaa + '$' + groupsAdd[j].value + '$';
+            categoryGroupsAdd = categoryGroupsAdd + '$' + groupsAdd[j].value + '$';
         }
     }
     
-    var b={
-        categoryId:a,
-        categoryName:aa,
-        description:aaa,
-        active:aaaa,
-        groups:aaaaa,
-        groupsAdd:aaaaaa
+    var parameters = {
+        categoryId: categoryId,
+        categoryName: categoryName,
+        description: categoryDescription,
+        active: categoryActive,
+        groups: categoryGroups,
+        groupsAdd: categoryGroupsAdd
     };
-    var c=new Zikula.Ajax.Request(Zikula.Config.baseURL+"ajax.php?module=IWdocmanager&func=createCategory",{
-        parameters: b,
+    var ajaxResponse = new Zikula.Ajax.Request(Zikula.Config.baseURL+"ajax.php?module=IWdocmanager&func=createCategory",{
+        parameters: parameters,
         onComplete: createCategory_response,
         onFailure: failure
     });
 }
 
-function createCategory_response(a){
-    if(!a.isSuccess()){
-        Zikula.showajaxerror(a.getMessage());
+function createCategory_response(ajaxResponse){
+    if(!ajaxResponse.isSuccess()){
+        Zikula.showajaxerror(ajaxResponse.getMessage());
         return
     }
-    var b=a.getData();
+    var data = ajaxResponse.getData();
     
-    $("IWdocmanager_admin").update(b.content);
+    $("IWdocmanager_admin").update(data.content);
 }
 
-function updateCategory(a){
-    var f = document.forms['edit_' + a];
-    var aa = f.categoryName.value;
-    var aaa = f.description.value;
-    var aaaa = f.active.value;
-    var aaaaa = '';
-    var aaaaaa = '';
+function updateCategory(categoryId){
+    var form = document.forms['edit_' + categoryId];
+    var categoryName = form.categoryName.value;
+    var categoryDescription = form.description.value;
+    var categoryGroups = '';
+    var categoryGroupsAdd = '';
+
+    if(form.active.checked) {
+        categoryActive = '1';
+    } else {
+        categoryActive = '0';
+    }
     
-    var groups = f.elements['groups[]'];
+    var groups = form.elements['groups[]'];
     for (var i = 0; i < groups.length; i++) {
         if (groups[i].checked) {
-            aaaaa = aaaaa + '$' + groups[i].value + '$';
+            categoryGroups = categoryGroups + '$' + groups[i].value + '$';
         }
     }
     
-    var groupsAdd = f.elements['groupsAdd[]'];
+    var groupsAdd = form.elements['groupsAdd[]'];
     for (var j = 0; j < groupsAdd.length; j++) {
         if (groupsAdd[j].checked) {
-            aaaaaa = aaaaaa + '$' + groupsAdd[j].value + '$';
+            categoryGroupsAdd = categoryGroupsAdd + '$' + groupsAdd[j].value + '$';
         }
     }
     
-    var b={
-        categoryId:a,
-        categoryName:aa,
-        description:aaa,
-        active:aaaa,
-        groups:aaaaa,
-        groupsAdd:aaaaaa
+    var parameters = {
+        categoryId: categoryId,
+        categoryName: categoryName,
+        description: categoryDescription,
+        active: categoryActive,
+        groups: categoryGroups,
+        groupsAdd: categoryGroupsAdd
     };
-    var c=new Zikula.Ajax.Request(Zikula.Config.baseURL+"ajax.php?module=IWdocmanager&func=updateCategory",{
-        parameters: b,
+    var ajaxResponse = new Zikula.Ajax.Request(Zikula.Config.baseURL+"ajax.php?module=IWdocmanager&func=updateCategory",{
+        parameters: parameters,
         onComplete: updateCategory_response,
         onFailure: failure
     });
 }
 
-function updateCategory_response(a){
-    if(!a.isSuccess()){
-        Zikula.showajaxerror(a.getMessage());
+function updateCategory_response(ajaxResponse){
+    if(!ajaxResponse.isSuccess()){
+        Zikula.showajaxerror(ajaxResponse.getMessage());
         return
     }
-    var b=a.getData();
+    var data = ajaxResponse.getData();
     
-    $("IWdocmanager_admin").update(b.content);
+    $("IWdocmanager_admin").update(data.content);
 }
 
 function openDocumentLink(a){
