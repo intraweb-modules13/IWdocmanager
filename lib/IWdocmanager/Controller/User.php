@@ -43,6 +43,7 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         $allCategories = ModUtil::Func($this->name, 'user', 'getUserCategories', array('accessType' => 'read'));
         $categoryPathLinks = $allCategories[$categoryId]['categoryPathLinks'];
 
+
         if ($categoryId > 0) {
             $documentsContent = ModUtil::func($this->name, 'user', 'getDocumentsContent', array('categoryId' => $categoryId));
             $currentCat = ModUtil::apiFunc($this->name, 'user', 'getCategory', array('categoryId' => $categoryId));
@@ -188,17 +189,19 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         foreach ($categories as $category) {
 
             $groups = ($accessType == 'read') ? unserialize($category['groups']) : unserialize($category['groupsAdd']);
-
             if ((count(array_intersect($userGroupsArray, $groups)) > 0) || (UserUtil::isLoggedIn() && in_array(0, $groups)) || (in_array(-1, $groups) && !UserUtil::isLoggedIn()) || SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT)) {
-                $categoryData[$category['categoryId']] = array('categoryId' => $category['categoryId'],
-                    'categoryPath' => $desc . $category['categoryName'],
-                    'categoryPathLinks' => $descLinks . $category['categoryName'],
-                    'categoryName' => $category['categoryName'],
-                    'padding' => $level * 20 . 'px',
-                    'description' => $category['description'],
-                    'nDocuments' => $category['nDocuments'],
-                    'nDocumentsNV' => $category['nDocumentsNV'],
-                );
+                if((($accessType == 'read') && ($category['active'] == '1')) || (SecurityUtil::checkPermission('IWdocmanager::', '::', ACCESS_EDIT))) {
+                    $categoryData[$category['categoryId']] = array('categoryId' => $category['categoryId'],
+                        'categoryPath' => $desc . $category['categoryName'],
+                        'categoryPathLinks' => $descLinks . $category['categoryName'],
+                        'categoryName' => $category['categoryName'],
+                        'padding' => $level * 20 . 'px',
+                        'description' => $category['description'],
+                        'nDocuments' => $category['nDocuments'],
+                        'nDocumentsNV' => $category['nDocumentsNV'],
+                        'active' => $category['active']
+                    );
+                }                
 
                 // Add the options
                 $categoryinitData = ModUtil::func($this->name, 'user', 'getUserCategories', array('parentId' => $category['categoryId'],
