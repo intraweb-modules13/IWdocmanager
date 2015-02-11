@@ -80,30 +80,4 @@ class IWdocmanager_Api_Admin extends Zikula_AbstractApi {
         return true;
     }
     
-    public function syncDocumentsNumber() {
-    	// Security check
-    	if (!SecurityUtil::checkPermission('IWdocmanager::', "::", ACCESS_ADMIN)) {
-    		throw new Zikula_Exception_Forbidden();
-    	}
-    	
-    	$tables = DBUtil::getTables();
-    	$tableColumns = $tables['IWdocmanager_column'];
-    	$sql = "SELECT categoryId FROM IWdocmanager_categories";
-    	$idCategories = DBUtil::selectFieldArray('IWdocmanager_categories', 'categoryId');
-        
-        foreach( $idCategories as $categoryId) {
-            $where = "$tableColumns[categoryId] = $categoryId AND $tableColumns[validated] = 1 AND $tableColumns[versioned] <= 0";
-            $number = DBUtil::selectObjectCount('IWdocmanager', $where);
-
-            $where = "$tableColumns[categoryId] = $categoryId AND $tableColumns[validated] = 0 AND $tableColumns[versioned] <= 0";
-            $numberNoValidated = DBUtil::selectObjectCount('IWdocmanager', $where);
-
-            $tableCatColumn = $table['IWdocmanager_categories_column'];
-            $where = "categoryId = $categoryId";
-            $item = array('nDocuments' => $number,
-                            'nDocumentsNV' => $numberNoValidated
-            );
-            DBUtil::updateObject($item, 'IWdocmanager_categories', $where);
-        }
-    }
 }

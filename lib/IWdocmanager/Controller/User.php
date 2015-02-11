@@ -619,4 +619,21 @@ class IWdocmanager_Controller_User extends Zikula_AbstractController {
         return $bytes;
     }
 
+    /**
+     * Force update of the number of documents on every category. This is a
+     * wrapper for API function.
+     * 
+     * @author: Víctor Saavedra Martínez (vsaavedr@xtec.cat)
+     * 
+     * @return Boolean
+     */
+    public function syncDocumentCount() {
+        
+        // Update the records
+    	ModUtil::apiFunc($this->name, 'user', 'syncDocumentCount');
+        
+        // Go to documents list
+    	return System::redirect(ModUtil::url($this->name, 'user', 'viewDocs'));
+    }
+
 }

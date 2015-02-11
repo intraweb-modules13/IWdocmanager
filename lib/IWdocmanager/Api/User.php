@@ -444,5 +444,39 @@ class IWdocmanager_Api_User extends Zikula_AbstractApi {
 
         return $items;
     }
+    
+    /**
+     * Force update of the number of documents on every category.
+     * 
+     * @author: Víctor Saavedra Martínez (vsaavedr@xtec.cat)
+     * 
+     * @return Boolean
+     */
+    public function syncDocumentCount() {
+    	
+    	$tables = DBUtil::getTables();
+    	$tableColumns = $tables['IWdocmanager_column'];
+
+        $idCategories = DBUtil::selectFieldArray('IWdocmanager_categories', 'categoryId');
+        
+        foreach( $idCategories as $categoryId) {
+            $where = "$tableColumns[categoryId] = $categoryId AND $tableColumns[validated] = 1 AND $tableColumns[versioned] <= 0";
+            $number = DBUtil::selectObjectCount('IWdocmanager', $where);
+
+            $where = "$tableColumns[categoryId] = $categoryId AND $tableColumns[validated] = 0 AND $tableColumns[versioned] <= 0";
+            $numberNoValidated = DBUtil::selectObjectCount('IWdocmanager', $where);
+
+            $where = "categoryId = $categoryId";
+
+            $item = array(
+                'nDocuments' => $number,
+                'nDocumentsNV' => $numberNoValidated
+            );
+
+            DBUtil::updateObject($item, 'IWdocmanager_categories', $where);
+        }
+        
+        return true;
+    }
 
 }
